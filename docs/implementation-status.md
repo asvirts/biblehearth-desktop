@@ -5,13 +5,13 @@ BibleHearth is implemented, but is **not cleared for public installer release**.
 ## Verified locally
 
 - Frontend production build and TypeScript check.
-- Automated provider contract, translation completeness, autosave, persistence, diagnostics-consent, and updater tests.
-- Rust migration, strict validation, disk reopen, transactional import, conflict preservation, and idempotency tests.
-- Release-evidence gate tests.
+- 44 frontend tests: provider contract, translation completeness, autosave, persistence, diagnostics-consent, and updater behavior.
+- 10 Rust tests: migrations, strict validation, disk reopen, transactional import, conflict preservation, and idempotency.
+- Six release-evidence gate tests.
 - Live app-licensed catalog and chapter returned HTTP 200. Provider pagination was corrected to 99 after live HTTP 400 at 100.
 - Packaged macOS Apple Silicon debug app launches and renders real Scripture with attribution.
 - Native search returns results and opens the correct book/chapter.
-- Native note, bookmark, and highlight survive quit/relaunch.
+- Native note, bookmark, and highlight survive quit/relaunch. Immediate edit then Cmd+Q also preserves the last keystrokes after replacing macOS’s predefined Quit menu action with a save-first action. Verification-only library entries were removed afterward.
 - Native JSON backup export succeeds; importing it reports zero additions/updates and three unchanged records.
 - English, Spanish, Portuguese, Arabic, and Chinese custom settings inspected; Arabic mirrors layout without overflow. This is an engineering review, not native-speaker certification.
 

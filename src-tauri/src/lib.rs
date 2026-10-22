@@ -4,6 +4,7 @@ use std::sync::{
     Mutex,
 };
 use storage::{Annotation, AppState, ImportSummary, Location, Preferences};
+use tauri::menu::{Menu, MenuItem, MenuItemKind};
 use tauri::{Emitter, Manager, State};
 use tauri_plugin_dialog::DialogExt;
 
@@ -200,6 +201,42 @@ pub fn run() {
         }
     }));
     tauri::Builder::default()
+        .menu(|app| {
+            let menu = Menu::default(app)?;
+            let quit = MenuItem::with_id(
+                app,
+                "biblehearth.quit",
+                "Quit BibleHearth",
+                true,
+                Some("CmdOrCtrl+Q"),
+            )?;
+            // Tauri's pinned default places predefined Quit last in the first
+            // submenu (Application on macOS, File on Windows). Native macOS
+            // terminate: bypasses cancellable exit requests, so replace that item.
+            #[cfg(any(target_os = "macos", target_os = "windows"))]
+            if let Some(MenuItemKind::Submenu(submenu)) = menu.items()?.first() {
+                let count = submenu.items()?.len();
+                if count > 0 {
+                    submenu.remove_at(count - 1)?;
+                }
+                submenu.append(&quit)?;
+            }
+            #[cfg(not(any(target_os = "macos", target_os = "windows")))]
+            menu.insert(
+                &tauri::menu::Submenu::with_items(app, "File", true, &[&quit])?,
+                0,
+            )?;
+            Ok(menu)
+        })
+        .on_menu_event(|app, event| {
+            if event.id().as_ref() == "biblehearth.quit" {
+                if app.get_webview_window("main").is_some() {
+                    let _ = app.emit("biblehearth-exit-requested", ());
+                } else {
+                    app.exit(0);
+                }
+            }
+        })
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_process::init())

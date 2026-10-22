@@ -75,7 +75,7 @@ export const en = {
     "Your personal library stays on this device. Bible content is requested online from YouVersion Platform.",
   crashReports: "Share anonymous error reports",
   crashReportsBody:
-    "Optional reports go to BibleHearth’s personal Sentry project. Notes, Scripture, searches, and credentials are excluded. No session recordings or performance tracking.",
+    "Optional error reports help improve BibleHearth. Notes, Scripture, searches, and credentials are excluded. No session recordings or performance tracking.",
   sentryUnavailable: "Error reporting is not configured for this build.",
   backups: "Keep your library safe",
   backupsBody:
@@ -149,7 +149,7 @@ export const en = {
     "Download this update and install it? Your notes will be saved first.",
   cannotLeave: "Your note could not be saved. Retry saving before leaving.",
   consentUnavailable:
-    "Reporting remains off until a personal Sentry project is configured.",
+    "Reporting is unavailable in this build.",
   filter: "Filter",
   recentEmpty: "Your next discovery belongs here.",
   openSaved: "Open passage",
