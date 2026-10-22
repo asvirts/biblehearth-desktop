@@ -147,6 +147,7 @@ export type PlatformReaderProps = {
   t: Translator;
   theme?: Theme;
   clearSelectionSignal?: number;
+  onReference?: (reference: string) => void;
   onReadingSettingsChange?: (patch: {
     fontSize?: number;
     lineHeight?: number;
@@ -192,6 +193,11 @@ function Reader(props: PlatformReaderProps) {
     location.chapter,
   );
   const [keyboardVerse, setKeyboardVerse] = useState("");
+  const onReference = props.onReference;
+  const humanReference = passage.passage?.reference ?? "";
+  useEffect(() => {
+    if (humanReference) onReference?.(humanReference);
+  }, [humanReference, onReference]);
   useEffect(
     () => setKeyboardVerse(""),
     [location.versionId, location.book, location.chapter, clearSelectionSignal],

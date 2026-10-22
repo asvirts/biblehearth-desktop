@@ -32,7 +32,6 @@ import {
   Check,
   Sparkles,
   WifiOff,
-  ChevronRight,
 } from "lucide-react";
 import { invoke, isTauri } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
@@ -62,7 +61,7 @@ import type {
   Selection,
 } from "./types";
 
-const colors = ["#A78BFA", "#FB7185", "#2DD4BF", "#FBBF24"];
+const colors = ["#B9A0E6", "#F0907A", "#7CC3B2", "#F0C063"];
 const colorKeys = ["violet", "coral", "teal", "amber"];
 function Brand() {
   return (
@@ -125,6 +124,7 @@ export default function App() {
   const [filter, setFilter] = useState("all");
   const [query, setQuery] = useState("");
   const [chooser, setChooser] = useState(false);
+  const [reference, setReference] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<Annotation | null>(null);
   const [update, setUpdate] = useState<Update | null>(null);
   const [updateStatus, setUpdateStatus] = useState("");
@@ -236,7 +236,10 @@ export default function App() {
     let disposed = false;
     let ending = false;
     const subscriptions: (() => void)[] = [];
-    const remember = (unlisten: () => void) => {if(disposed) unlisten(); else subscriptions.push(unlisten)};
+    const remember = (unlisten: () => void) => {
+      if (disposed) unlisten();
+      else subscriptions.push(unlisten);
+    };
     const finish = async (quit: boolean) => {
       if (ending) return;
       ending = true;
@@ -246,15 +249,28 @@ export default function App() {
           if (quit) await invoke("finish_exit");
           else await getCurrentWindow().destroy();
         }
-      } catch {setToast(tRef.current("cannotLeave"));}
-      finally {ending = false;}
+      } catch {
+        setToast(tRef.current("cannotLeave"));
+      } finally {
+        ending = false;
+      }
     };
-    void getCurrentWindow().onCloseRequested(event => {
-      event.preventDefault();
-      void finish(false);
-    }).then(remember).catch(()=>setToast(tRef.current("cannotLeave")));
-    void listen("biblehearth-exit-requested", () => {void finish(true)}).then(remember).catch(()=>setToast(tRef.current("cannotLeave")));
-    return () => {disposed = true;subscriptions.forEach(unlisten=>unlisten());};
+    void getCurrentWindow()
+      .onCloseRequested((event) => {
+        event.preventDefault();
+        void finish(false);
+      })
+      .then(remember)
+      .catch(() => setToast(tRef.current("cannotLeave")));
+    void listen("biblehearth-exit-requested", () => {
+      void finish(true);
+    })
+      .then(remember)
+      .catch(() => setToast(tRef.current("cannotLeave")));
+    return () => {
+      disposed = true;
+      subscriptions.forEach((unlisten) => unlisten());
+    };
   }, [commitEditor]);
   useEffect(() => {
     const before = (e: BeforeUnloadEvent) => {
@@ -288,6 +304,13 @@ export default function App() {
         }),
       );
       setRoute("reader");
+      setReference((current) =>
+        stateRef.current.location &&
+        stateRef.current.location.book === location.book &&
+        stateRef.current.location.chapter === location.chapter
+          ? current
+          : "",
+      );
       setChooser(false);
       setSelection(null);
       setClear((x) => x + 1);
@@ -499,6 +522,9 @@ export default function App() {
         .toLocaleLowerCase()
         .includes(query.toLocaleLowerCase()),
   );
+  const placeLabel = state.location
+    ? reference || `${state.location.book} ${state.location.chapter}`
+    : "";
   const navigation = [
     { id: "home" as const, icon: House },
     { id: "reader" as const, icon: BookOpen },
@@ -635,10 +661,6 @@ export default function App() {
               >
                 <Menu />
               </button>
-              <span className="breadcrumb">
-                BibleHearth <ChevronRight size={14} />{" "}
-                <strong>{t(route)}</strong>
-              </span>
               <div className="topbar-actions">
                 {!online && (
                   <span className="offline-badge">
@@ -692,11 +714,7 @@ export default function App() {
                     <section className="hero-card">
                       <div className="hero-copy">
                         <span className="eyebrow">{t("yourReading")}</span>
-                        <h2>
-                          {state.location
-                            ? `${state.location.book} ${state.location.chapter}`
-                            : t("setupTitle")}
-                        </h2>
+                        <h2>{state.location ? placeLabel : t("setupTitle")}</h2>
                         <p>
                           {state.location ? t("readerHint") : t("setupBody")}
                         </p>
@@ -711,23 +729,21 @@ export default function App() {
                         </button>
                       </div>
                       <div className="hero-art" aria-hidden="true">
-                        <div className="sun-disc" />
-                        <div className="orbit orbit-one" />
-                        <div className="orbit orbit-two" />
-                        <div className="book-illustration">
-                          <BookOpen size={112} strokeWidth={1.1} />
+                        <div className="hero-glow" />
+                        <div className="hero-ring" />
+                        <div className="hero-ring two" />
+                        <div className="hero-book">
+                          <BookOpen size={120} strokeWidth={0.9} />
                         </div>
-                        <Sparkles className="sparkle one" />
-                        <Sparkles className="sparkle two" size={16} />
-                        <div className="hill hill-one" />
-                        <div className="hill hill-two" />
                       </div>
                     </section>
                     <section className="daily-card">
-                      <span className="daily-label">
-                        <Sparkles size={17} />
-                        {t("dailyVerse")}
-                      </span>
+                      {!state.location && (
+                        <span className="daily-label">
+                          <Sparkles size={17} />
+                          {t("dailyVerse")}
+                        </span>
+                      )}
                       {state.location ? (
                         <Votd
                           versionId={state.location.versionId}
@@ -797,9 +813,7 @@ export default function App() {
                     <div>
                       <span className="eyebrow">{t("reader")}</span>
                       <h1>
-                        {state.location
-                          ? `${state.location.book} ${state.location.chapter}`
-                          : t("chooseVersion")}
+                        {state.location ? placeLabel : t("chooseVersion")}
                       </h1>
                     </div>
                     {state.location && (
@@ -819,6 +833,7 @@ export default function App() {
                         locale={state.preferences.locale}
                         highlights={highlighted}
                         onLocationChange={(l) => void locate(l)}
+                        onReference={setReference}
                         onSelection={(s) =>
                           setSelection(s.verses.length ? s : null)
                         }
