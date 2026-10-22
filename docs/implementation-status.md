@@ -1,0 +1,27 @@
+# Implementation verification — 22 October 2026
+
+BibleHearth is implemented, but is **not cleared for public installer release**.
+
+## Verified locally
+
+- Frontend production build and TypeScript check.
+- Automated provider contract, translation completeness, autosave, persistence, diagnostics-consent, and updater tests.
+- Rust migration, strict validation, disk reopen, transactional import, conflict preservation, and idempotency tests.
+- Release-evidence gate tests.
+- Live app-licensed catalog and chapter returned HTTP 200. Provider pagination was corrected to 99 after live HTTP 400 at 100.
+- Packaged macOS Apple Silicon debug app launches and renders real Scripture with attribution.
+- Native search returns results and opens the correct book/chapter.
+- Native note, bookmark, and highlight survive quit/relaunch.
+- Native JSON backup export succeeds; importing it reports zero additions/updates and three unchanged records.
+- English, Spanish, Portuguese, Arabic, and Chinese custom settings inspected; Arabic mirrors layout without overflow. This is an engineering review, not native-speaker certification.
+
+## Still required for public release
+
+- Confirm registered product identity, distribution configuration, and translation-specific license/attribution terms. Successful content access alone does not establish complete release rights.
+- macOS signing/notarization, Windows signing, updater signing keys/feed, and release infrastructure.
+- Installed-app runtime verification on Mac Intel, Windows x64/ARM64, Linux x64/ARM64, including X11/Wayland and Debian installs.
+- Signed update, invalid-signature, and interrupted-download end-to-end checks.
+- Full screen-reader/keyboard and RTL Scripture matrix on target operating systems.
+- Sentry is intentionally unconfigured at the user's request; opt-in controls remain disabled until a personal project is configured.
+
+The checked-in release workflows create draft candidates and require evidence before publication. No public installer is claimed to be signed or ready.

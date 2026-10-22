@@ -1,0 +1,49 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "BibleHearth",
+  "version": "0.1.0",
+  "identifier": "app.biblehearth.desktop",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "BibleHearth",
+        "width": 1280,
+        "height": 850,
+        "minWidth": 780,
+        "minHeight": 600
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://*.youversion.com; font-src 'self' data: https://fonts.gstatic.com https://*.youversion.com https://*.bible.com; img-src 'self' data: https://*.youversion.com https://*.bible.com; connect-src ipc: http://ipc.localhost https://*.youversion.com https://*.bible.com https://*.sentry.io https://github.com https://objects.githubusercontent.com https://release-assets.githubusercontent.com; object-src 'none'; base-uri 'self'; frame-src 'none'"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "category": "Reference",
+    "shortDescription": "A peaceful home for Scripture",
+    "copyright": "MIT \u2014 BibleHearth contributors",
+    "linux": {
+      "deb": {
+        "depends": [
+          "libwebkit2gtk-4.1-0",
+          "libgtk-3-0"
+        ]
+      }
+    },
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  }
+}

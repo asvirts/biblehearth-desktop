@@ -1,0 +1,52 @@
+vi.mock("../src/locales", () => ({ translations: {} }));
+import { beforeEach, describe, expect, it, vi } from "vitest";
+const native = vi.hoisted(() => ({ enabled: false, invoke: vi.fn() }));
+vi.mock("@tauri-apps/api/core", () => ({
+  isTauri: () => native.enabled,
+  invoke: native.invoke,
+}));
+describe("serialized persistence", () => {
+  beforeEach(() => {
+    vi.resetModules();
+    native.enabled = false;
+    native.invoke.mockReset();
+  });
+  it("merges rapid preference patches without reverting independent fields", async () => {
+    const { storage } = await import("../src/storage");
+    await Promise.all([
+      storage.preferences({ theme: "dark" }),
+      storage.preferences({ fontSize: 18 }),
+      storage.preferences({ locale: "ar" }),
+    ]);
+    expect((await storage.load()).preferences).toMatchObject({
+      theme: "dark",
+      fontSize: 18,
+      locale: "ar",
+    });
+  });
+  it("recovers the queue after a rejected write and surfaces the current failure at flush", async () => {
+    native.enabled = true;
+    native.invoke.mockRejectedValueOnce(new Error("disk full"));
+    const { storage, flushStorage } = await import("../src/storage");
+    await expect(storage.delete("a")).rejects.toThrow("disk full");
+    await expect(flushStorage()).rejects.toThrow("disk full");
+    native.invoke.mockResolvedValueOnce({ annotations: [] });
+    await storage.delete("a");
+    await expect(flushStorage()).resolves.toEqual({ annotations: [] });
+  });
+  it("serializes export after writes and distinguishes canceled native imports", async () => {
+    native.enabled = true;
+    const { storage } = await import("../src/storage");
+    native.invoke
+      .mockResolvedValueOnce({ annotations: [] })
+      .mockResolvedValueOnce(true)
+      .mockResolvedValueOnce(null);
+    await Promise.all([storage.delete("a"), storage.export()]);
+    expect(await storage.import()).toBeNull();
+    expect(native.invoke.mock.calls.map(([name]) => name)).toEqual([
+      "delete_annotation",
+      "export_backup_file",
+      "import_backup_file",
+    ]);
+  });
+});

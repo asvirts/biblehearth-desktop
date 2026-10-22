@@ -1,0 +1,33 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "main-window",
+  "description": "Minimum desktop reader capabilities; database access uses validated application commands.",
+  "windows": [
+    "main"
+  ],
+  "permissions": [
+    "core:default",
+    "core:window:allow-destroy",
+    "process:allow-restart",
+    "updater:default",
+    "dialog:allow-open",
+    "dialog:allow-save",
+    {
+      "identifier": "opener:allow-open-url",
+      "allow": [
+        {
+          "url": "https://github.com/asvirts/biblehearth-desktop/*"
+        },
+        {
+          "url": "https://developers.youversion.com/*"
+        },
+        {
+          "url": "https://www.bible.com/*"
+        },
+        {
+          "url": "https://www.youversion.com/*"
+        }
+      ]
+    }
+  ]
+}

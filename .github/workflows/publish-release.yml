@@ -1,0 +1,40 @@
+name: Publish verified release
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Verified existing draft release tag
+        required: true
+permissions:
+  contents: write
+concurrency:
+  group: release-candidate
+  cancel-in-progress: false
+jobs:
+  publish:
+    environment: public-release
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Download exact draft assets and inspect immutable release commit
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          gh release view "$RELEASE_TAG" --json isDraft,tagName > release.json
+          gh release download "$RELEASE_TAG" --dir release-assets
+          git fetch origin "refs/tags/$RELEASE_TAG:refs/tags/$RELEASE_TAG"
+          git rev-list -n 1 "$RELEASE_TAG" > release-commit.txt
+      - name: Validate release evidence, manifest, and artifact hashes
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+          RELEASE_REPOSITORY: ${{ github.repository }}
+        run: node scripts/release-gate.mjs release-assets
+      - name: Publish verified draft including stable updater manifest
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: gh release edit "$RELEASE_TAG" --draft=false --latest
