@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!-- BibleHearth app icon. Matches the biblehearth.online mark; 1024 canvas with ~10% transparent margin for macOS. -->
+  <defs>
+    <linearGradient id="paper" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FBF7EF"/>
+      <stop offset="1" stop-color="#F3EBDD"/>
+    </linearGradient>
+    <linearGradient id="ink" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#352B1C"/>
+      <stop offset="1" stop-color="#241D13"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(100 100) scale(12.875)">
+    <rect width="64" height="64" rx="14" fill="url(#paper)"/>
+    <rect x="13" y="10" width="38" height="44" rx="6" fill="url(#ink)"/>
+    <path fill="#F7F1E8" d="M21.5 48V27c0-7 4.4-11.5 10.5-11.5S42.5 20 42.5 27v21H21.5z"/>
+    <path fill="#B54A2C" d="M24 38.5c0-6.5 5.2-10.2 8-16.5 2.8 6.3 8 10 8 16.5a8 8 0 1 1-16 0z"/>
+    <path fill="#E8B45A" d="M28.2 39.2c0-3.6 2.6-5.6 3.8-9 1.2 3.4 3.8 5.4 3.8 9a3.8 3.8 0 1 1-7.6 0z"/>
+  </g>
+</svg>

@@ -66,9 +66,29 @@ const colorKeys = ["violet", "coral", "teal", "amber"];
 function Brand() {
   return (
     <div className="brand">
-      <span className="brand-mark">
-        <Flame size={25} strokeWidth={1.7} />
-      </span>
+      <svg
+        className="brand-mark"
+        viewBox="0 0 64 64"
+        width="38"
+        height="38"
+        aria-hidden="true"
+        focusable="false"
+      >
+        <rect width="64" height="64" rx="14" fill="#F7F1E8" />
+        <rect x="13" y="10" width="38" height="44" rx="6" fill="#2C2416" />
+        <path
+          fill="#F7F1E8"
+          d="M21.5 48V27c0-7 4.4-11.5 10.5-11.5S42.5 20 42.5 27v21H21.5z"
+        />
+        <path
+          fill="#B54A2C"
+          d="M24 38.5c0-6.5 5.2-10.2 8-16.5 2.8 6.3 8 10 8 16.5a8 8 0 1 1-16 0z"
+        />
+        <path
+          fill="#E8B45A"
+          d="M28.2 39.2c0-3.6 2.6-5.6 3.8-9 1.2 3.4 3.8 5.4 3.8 9a3.8 3.8 0 1 1-7.6 0z"
+        />
+      </svg>
       <span>
         Bible<span className="brand-light">Hearth</span>
       </span>
