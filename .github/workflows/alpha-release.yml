@@ -1,0 +1,149 @@
+name: Build unsigned alpha installers
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing published alpha prerelease (source tag is built exactly)
+        required: true
+        default: v0.1.0-alpha.1
+
+permissions:
+  contents: write
+concurrency:
+  group: alpha-installers-${{ inputs.tag }}
+  cancel-in-progress: false
+
+# Experimental downloads only. This does not relax the signed stable release gates,
+# publish an updater manifest, or certify native interactive runtime verification.
+jobs:
+  build:
+    name: Alpha ${{ matrix.target }}
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15-intel
+            target: x86_64-apple-darwin
+            bundles: dmg
+          - runner: macos-14
+            target: aarch64-apple-darwin
+            bundles: dmg
+          - runner: windows-2022
+            target: x86_64-pc-windows-msvc
+            bundles: nsis
+          - runner: windows-11-arm
+            target: aarch64-pc-windows-msvc
+            bundles: nsis
+          - runner: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+            bundles: appimage,deb
+          - runner: ubuntu-22.04-arm
+            target: aarch64-unknown-linux-gnu
+            bundles: appimage,deb
+    runs-on: ${{ matrix.runner }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_TAG: ${{ inputs.tag }}
+      TARGET: ${{ matrix.target }}
+      BUNDLES: ${{ matrix.bundles }}
+      VITE_YVP_APP_KEY: ${{ secrets.YOUVERSION_APP_KEY }}
+      VITE_UPDATES_ENABLED: "false"
+      VITE_SENTRY_DSN: ""
+      SENTRY_DSN: ""
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: refs/tags/${{ inputs.tag }}
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Require an existing published alpha and configured Scripture access
+        shell: bash
+        run: |
+          node --input-type=module <<'JS'
+          import { execFileSync } from 'node:child_process';
+          import { readFileSync } from 'node:fs';
+          const tag = process.env.RELEASE_TAG;
+          if (!/^v\d+\.\d+\.\d+-alpha\.\d+$/.test(tag)) throw new Error('Only versioned alpha tags are accepted');
+          if (!process.env.VITE_YVP_APP_KEY?.trim()) throw new Error('Configure YOUVERSION_APP_KEY before building installers');
+          const release = JSON.parse(execFileSync('gh', ['release', 'view', tag, '--json', 'tagName,isPrerelease,isDraft'], { encoding: 'utf8' }));
+          if (release.tagName !== tag || !release.isPrerelease || release.isDraft) throw new Error('Target must be an existing published prerelease');
+          const git = (...args) => execFileSync('git', args, { encoding: 'utf8' }).trim();
+          if (git('rev-parse', 'HEAD') !== git('rev-parse', `refs/tags/${tag}^{commit}`)) throw new Error('Checkout does not match release tag');
+          const base = tag.slice(1).split('-')[0];
+          for (const file of ['package.json', 'src-tauri/tauri.conf.json']) {
+            if (JSON.parse(readFileSync(file, 'utf8')).version !== base) throw new Error(`${file} version does not match alpha base`);
+          }
+          JS
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+          key: alpha-${{ matrix.target }}
+      - name: Install Linux packaging dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libfuse2
+      - run: bun install --frozen-lockfile
+      - run: bun run typecheck
+      - run: bun run test --run
+      - run: bun run build
+      - run: cargo test --manifest-path src-tauri/Cargo.toml --locked --target ${{ matrix.target }}
+      - name: Build installer without updater artifacts
+        shell: bash
+        run: |
+          printf '%s\n' '{"bundle":{"createUpdaterArtifacts":false}}' > alpha-build-config.json
+          bun run tauri build --target "$TARGET" --bundles "$BUNDLES" --config alpha-build-config.json
+      - name: Validate, checksum, upload, and read back installers
+        shell: bash
+        run: |
+          node --input-type=module <<'JS'
+          import { execFileSync } from 'node:child_process';
+          import { readdirSync, readFileSync, writeFileSync, mkdirSync, copyFileSync, statSync } from 'node:fs';
+          import { join, basename, extname } from 'node:path';
+          import { createHash } from 'node:crypto';
+          const { RELEASE_TAG: tag, TARGET: target } = process.env;
+          const gh = (...args) => execFileSync('gh', args, { encoding: 'utf8' });
+          const release = JSON.parse(gh('release', 'view', tag, '--json', 'isPrerelease,isDraft'));
+          if (!release.isPrerelease || release.isDraft) throw new Error('Release state changed; refusing upload');
+          const root = `src-tauri/target/${target}/release/bundle`;
+          const walk = path => readdirSync(path, { withFileTypes: true }).flatMap(entry => entry.isDirectory() ? walk(join(path, entry.name)) : [join(path, entry.name)]);
+          const expected = target.includes('linux') ? ['.AppImage', '.deb'] : target.includes('windows') ? ['.exe'] : ['.dmg'];
+          const candidates = walk(root).filter(path => expected.includes(extname(path)));
+          mkdirSync('alpha-assets', { recursive: true });
+          const files = [];
+          for (const extension of expected) {
+            const matches = candidates.filter(path => extname(path) === extension);
+            if (matches.length !== 1 || statSync(matches[0]).size < 100000) throw new Error(`Expected one nonempty ${extension} installer`);
+            const name = `BibleHearth_${tag.slice(1)}_${target}${extension}`;
+            copyFileSync(matches[0], join('alpha-assets', name));
+            files.push(name);
+          }
+          const hash = path => createHash('sha256').update(readFileSync(path)).digest('hex');
+          const checksum = `SHA256SUMS-${target}.txt`;
+          writeFileSync(join('alpha-assets', checksum), files.map(name => `${hash(join('alpha-assets', name))}  ${name}\n`).join(''));
+          files.push(checksum);
+          const provenance = `BUILD-${target}.txt`;
+          writeFileSync(join('alpha-assets', provenance), `BibleHearth experimental unsigned alpha\nTag: ${tag}\nCommit: ${execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim()}\nTarget: ${target}\nWorkflow: ${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}\nNo distribution signing or notarization. Automatic updates disabled.\nNative interactive runtime verification remains separate from build/test success.\n`);
+          files.push(provenance);
+          gh('release', 'upload', tag, ...files.map(name => join('alpha-assets', name)), '--clobber');
+          mkdirSync('alpha-readback', { recursive: true });
+          for (const name of files) {
+            gh('release', 'download', tag, '--pattern', name, '--dir', 'alpha-readback', '--clobber');
+            if (hash(join('alpha-assets', name)) !== hash(join('alpha-readback', name))) throw new Error(`Uploaded asset failed checksum: ${basename(name)}`);
+          }
+          console.log(`Verified ${files.length} uploaded assets for ${target}`);
+          JS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: alpha-${{ matrix.target }}
+          path: alpha-assets/*
+          if-no-files-found: ignore

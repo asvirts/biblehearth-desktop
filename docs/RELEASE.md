@@ -1,8 +1,16 @@
 # Release operations
 
-No release has been certified by this scaffold. A green compilation is not runtime verification. The workflows create drafts only; publishing requires the separate gated workflow and native evidence from every target. Do not publish manually to bypass gates.
+No release has been certified by this scaffold. A green compilation is not runtime verification. Stable releases require the gated publication workflow and native evidence from every target. Experimental alpha prereleases follow the separate policy below; they must never be presented as stable or verified.
 
-## Owner setup
+## Experimental alpha prereleases
+
+The owner has authorized downloadable unsigned installers for `v0.1.0-alpha.1`. A separate alpha build workflow may attach successful native builds to this existing GitHub prerelease without stable signing credentials or a stable updater manifest. Keep Sentry disabled, updater artifacts disabled, and the release marked as a prerelease. Never publish `latest.json` from this workflow.
+
+Build all six planned native targets, but describe each uploaded artifact as **build-only / runtime unverified** unless the exact packaged artifact has an installed-app test receipt. The earlier macOS Apple Silicon debug verification is useful evidence, but does not certify a newly built release installer. Report missing or failed targets explicitly in the release notes; do not infer support from a successful compile. Publish checksums for the uploaded bytes and record the source commit.
+
+Release notes must explain that installers are unsigned, macOS builds are unnotarized, platform security prompts may prevent launch, updates are manual, and users should export local data before changing versions. Do not provide commands to disable platform security protections. Content access still depends on the registered application and its licensed catalog; alpha status does not waive Scripture license obligations. Professional translation review and the full accessibility/runtime matrix remain incomplete.
+
+## Stable release owner setup
 
 1. Confirm `app.biblehearth.desktop`, BibleHearth branding, and `asvirts/biblehearth-desktop` as the public app identity. Register the Platform app, configure supported desktop origins, and verify licensed versions, search, attribution, and Verse of the Day on packaged applications.
 2. Configure GitHub environments `release-signing` and `public-release` with required reviewers, no self-review, and protected tag/main rules. Repository administrators can bypass workflow controls; restrict that permission operationally. Never expose signing environments to pull requests.
@@ -27,7 +35,7 @@ No release has been certified by this scaffold. A green compilation is not runti
 
 Add the real Windows signing configuration to this overlay. `release-preflight.mjs` writes the overlay only during the candidate job. Base development builds do not pretend to have valid update credentials.
 
-## Candidate and publication
+## Stable candidate and publication
 
 Keep package and Tauri versions equal. Create an immutable `vVERSION` tag pointing at the reviewed release commit, then dispatch **Build release candidate** with that tag. It builds macOS Intel/ARM64 DMGs, Windows x64/ARM64 NSIS installers, and Linux x64/ARM64 AppImages and Debian packages. The signing environment must be configured before this workflow is usable. Installer signing and Tauri updater signing are distinct.
 
@@ -60,7 +68,7 @@ Required targets: `darwin-x86_64`, `darwin-aarch64`, `windows-x86_64`, `windows-
 
 Dispatch **Publish verified release** after review. It verifies draft status, exact tag commit, six native attestations, gate evidence, manifest version/URLs/signature-file consistency, and all asset hashes. It then publishes the draft, making its already-verified `latest.json` available at the stable endpoint. Signature-file matching is an integrity check, not a cryptographic verification: actual invalid-signature rejection must pass in installed applications and be attested. Never replace assets after verification; rebuild under a new candidate if bytes change.
 
-## Current external blockers
+## Current stable-release blockers
 
 No content-license receipt, code-signing identities, notarization receipts, optional personal Sentry delivery receipts, six-target installed-app test results, or release approval is included. These cannot be manufactured by local source tests. Windows signing infrastructure needs owner provisioning; native hosted ARM runner availability must be confirmed. Locale review by a qualified reviewer remains necessary. The presence of workflows does not establish any of these gates.
 

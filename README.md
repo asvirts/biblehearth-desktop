@@ -2,7 +2,7 @@
 
 A free desktop Bible reader for macOS, Windows, and Linux, built with Tauri 2, Rust, React, TypeScript, Vite, and SQLite. Scripture comes from YouVersion Platform. Personal notes, bookmarks, highlights, preferences, and reading position belong to this app and stay on your device.
 
-**Development status:** implementation is not public-release certification. Licensed content access, signing, telemetry configuration, and native testing of all six architectures must pass before publication. See [release operations](docs/RELEASE.md).
+**Alpha status:** experimental installer builds may be published as GitHub prereleases for testing. They are unsigned and are not certified stable releases. Compilation does not establish native runtime support; only the macOS Apple Silicon debug app has completed the local checks listed in [verification status](docs/implementation-status.md). Stable publication retains signing, licensing, and six-target verification gates. See [release operations](docs/RELEASE.md).
 
 ## Development
 
@@ -30,7 +30,9 @@ Online Scripture; local personal data; no account, cloud sync, audio, parallel r
 
 ## Installation and support
 
-When verified releases are available, use [GitHub Releases](https://github.com/asvirts/biblehearth-desktop/releases). Choose your OS and CPU architecture: macOS DMG, Windows NSIS installer, or Linux AppImage/Debian package. Linux AppImages require executable permission and compatible WebKitGTK/system dependencies. Debian installations update through downloaded packages; do not replace them using the AppImage updater.
+Use the assets attached to [GitHub Releases](https://github.com/asvirts/biblehearth-desktop/releases); the release notes identify the actual available builds and their verification status. Choose your OS and CPU architecture: macOS DMG, Windows NSIS installer, or Linux AppImage/Debian package. A source archive is not an installer.
+
+Alpha installers are unsigned experimental builds. macOS may block an unnotarized app, and Windows may show an unknown-publisher warning. Follow your organization’s security policy; signing and notarization are planned for verified releases. Alpha builds do not use automatic updates: download a newer installer manually and export your personal-data backup first. Linux AppImages require executable permission and compatible WebKitGTK/system dependencies. Debian installations update through downloaded packages; do not replace them using the AppImage updater.
 
 See [support](docs/SUPPORT.md), [privacy](docs/PRIVACY.md), [verification checklist](docs/VERIFICATION.md), and [domain glossary](GLOSSARY.md).
 

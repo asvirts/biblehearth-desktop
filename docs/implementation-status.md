@@ -1,6 +1,6 @@
 # Implementation verification — 22 October 2026
 
-BibleHearth is implemented, but is **not cleared for public installer release**.
+BibleHearth is implemented. The owner has authorized **unsigned experimental alpha installers**, but the app is **not cleared for a verified stable release**. Actual downloadable artifacts and their build status are listed in the GitHub prerelease notes.
 
 ## Verified locally
 
@@ -15,7 +15,7 @@ BibleHearth is implemented, but is **not cleared for public installer release**.
 - Native JSON backup export succeeds; importing it reports zero additions/updates and three unchanged records.
 - English, Spanish, Portuguese, Arabic, and Chinese custom settings inspected; Arabic mirrors layout without overflow. This is an engineering review, not native-speaker certification.
 
-## Still required for public release
+## Still required for verified stable release
 
 - Confirm registered product identity, distribution configuration, and translation-specific license/attribution terms. Successful content access alone does not establish complete release rights.
 - macOS signing/notarization, Windows signing, updater signing keys/feed, and release infrastructure.
@@ -24,4 +24,4 @@ BibleHearth is implemented, but is **not cleared for public installer release**.
 - Full screen-reader/keyboard and RTL Scripture matrix on target operating systems.
 - Sentry is intentionally unconfigured at the user's request; opt-in controls remain disabled until a personal project is configured.
 
-The checked-in release workflows create draft candidates and require evidence before publication. No public installer is claimed to be signed or ready.
+The stable release workflows create draft candidates and require evidence before publication. The separate alpha workflow can publish unsigned experimental installers without enabling the stable updater. A successful build is not an installed-app verification result. All six targets remain planned; only the macOS Apple Silicon debug runtime checks above have been completed locally. No alpha installer is claimed to be signed, notarized, professionally translation-reviewed, or stable.
