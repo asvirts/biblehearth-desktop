@@ -2,6 +2,14 @@
 
 BibleHearth is implemented. The owner has authorized **unsigned experimental alpha installers**, but the app is **not cleared for a verified stable release**. Actual downloadable artifacts and their build status are listed in the GitHub prerelease notes.
 
+## Alpha installer verification
+
+- [v0.1.0-alpha.1](https://github.com/asvirts/biblehearth-desktop/releases/tag/v0.1.0-alpha.1) now provides eight experimental installers across all six native targets: two macOS DMGs, two Windows NSIS installers, and AppImage/Debian packages for both Linux architectures.
+- [Native build run](https://github.com/asvirts/biblehearth-desktop/actions/runs/39819240150) passed frontend and Rust tests, packaging, upload, and checksum readback for each target. All installer digests also match GitHub's stored asset digests.
+- Exact application source: `b7fca15410470fc55a6d032d928e9f73ab8e448e`; build workflow: `9de3729`. The release tag was not moved.
+- The downloaded Apple Silicon DMG additionally passed disk-image integrity, bundle identity, and ARM64 executable checks. A fresh release-build UI check was unavailable because the local Mac was locked; earlier debug runtime checks below remain separate evidence.
+- No publisher signing/notarization or automatic-update manifest. Sentry and automatic updates are disabled. Native interactive runtime verification on the other five targets remains outstanding.
+
 ## Verified locally
 
 - Frontend production build and TypeScript check.
