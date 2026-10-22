@@ -7,6 +7,15 @@ on:
         description: Existing published alpha prerelease (source tag is built exactly)
         required: true
         default: v0.1.0-alpha.1
+  workflow_call:
+    inputs:
+      tag:
+        description: Existing published alpha prerelease (source tag is built exactly)
+        required: true
+        type: string
+    secrets:
+      YOUVERSION_APP_KEY:
+        required: true
 
 permissions:
   contents: write

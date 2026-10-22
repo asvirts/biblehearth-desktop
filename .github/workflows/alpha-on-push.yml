@@ -1,0 +1,99 @@
+name: Publish alpha prerelease on push
+
+# Every push to main that changes application code becomes a new unsigned
+# experimental alpha prerelease (vMAJOR.MINOR.PATCH-alpha.N, N auto-incremented
+# from the version in package.json). Installers are attached by the reusable
+# alpha build workflow. This does not relax the signed stable release gates,
+# publish an updater manifest, or certify native runtime verification.
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
+      - LICENSE
+      - .gitignore
+      - .github/dependabot.yml
+
+permissions:
+  contents: write
+concurrency:
+  group: alpha-on-push
+  cancel-in-progress: false
+
+jobs:
+  prerelease:
+    name: Tag and create prerelease
+    if: ${{ !contains(github.event.head_commit.message, '[skip release]') }}
+    runs-on: ubuntu-22.04
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+      - run: bun install --frozen-lockfile
+      - run: bun run typecheck
+      - run: bun run test --run
+      - run: bun run build
+      - name: Choose the next alpha tag
+        id: tag
+        shell: bash
+        run: |
+          node --input-type=module <<'JS'
+          import { execFileSync } from 'node:child_process';
+          import { readFileSync, appendFileSync } from 'node:fs';
+          const base = JSON.parse(readFileSync('package.json', 'utf8')).version;
+          const tauri = JSON.parse(readFileSync('src-tauri/tauri.conf.json', 'utf8')).version;
+          if (base !== tauri) throw new Error(`package.json (${base}) and tauri.conf.json (${tauri}) versions differ`);
+          const tags = execFileSync('git', ['tag', '--list', `v${base}-alpha.*`], { encoding: 'utf8' }).split('\n').filter(Boolean);
+          const next = tags.reduce((max, tag) => Math.max(max, Number(tag.split('-alpha.')[1]) || 0), 0) + 1;
+          const tag = `v${base}-alpha.${next}`;
+          if (!/^v\d+\.\d+\.\d+-alpha\.\d+$/.test(tag)) throw new Error(`Unexpected tag ${tag}`);
+          appendFileSync(process.env.GITHUB_OUTPUT, `tag=${tag}\n`);
+          console.log(`Next alpha tag: ${tag}`);
+          JS
+      - name: Create tag and published prerelease
+        shell: bash
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+          SHA: ${{ github.sha }}
+          REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$TAG" "$SHA" -m "BibleHearth $TAG (experimental alpha)"
+          git push origin "refs/tags/$TAG"
+          cat > notes.md <<NOTES
+          ## BibleHearth $TAG — experimental alpha
+
+          Automatically published from commit \`$SHA\` on \`main\` ([build run]($RUN_URL)). Installers for all six native targets are attached as each build finishes; a target that is missing or failed its checks is not supported by this release.
+
+          **Read before installing**
+
+          - These installers are **unsigned**. macOS builds are **not notarized** and macOS may block them; Windows may show an unknown-publisher warning. Follow your organization's security policy. Do not disable platform protections to run this software.
+          - Every artifact is **build-only / runtime unverified** unless the release notes are later amended with an installed-app test receipt.
+          - **Updates are manual.** Automatic updates are disabled. Export your personal-data backup from Settings before changing versions.
+          - Linux AppImages need executable permission and compatible WebKitGTK system libraries. Debian installations update through downloaded packages only.
+          - Scripture access depends on the registered YouVersion Platform application and its licensed catalog. Alpha status does not waive license obligations. Professional translation review and the full accessibility/runtime matrix remain incomplete.
+
+          \`SHA256SUMS-<target>.txt\` and \`BUILD-<target>.txt\` beside each installer record the uploaded bytes and source commit.
+          NOTES
+          gh release create "$TAG" --prerelease --verify-tag \
+            --title "BibleHearth $TAG (alpha)" --notes-file notes.md
+          gh release view "$TAG" --json tagName,isPrerelease,isDraft,url
+
+  installers:
+    name: Build installers
+    needs: prerelease
+    uses: ./.github/workflows/alpha-release.yml
+    with:
+      tag: ${{ needs.prerelease.outputs.tag }}
+    secrets:
+      YOUVERSION_APP_KEY: ${{ secrets.YOUVERSION_APP_KEY }}

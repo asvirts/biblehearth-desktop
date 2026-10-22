@@ -2,7 +2,7 @@
 
 A free desktop Bible reader for macOS, Windows, and Linux, built with Tauri 2, Rust, React, TypeScript, Vite, and SQLite. Scripture comes from YouVersion Platform. Personal notes, bookmarks, highlights, preferences, and reading position belong to this app and stay on your device.
 
-**Alpha status:** experimental installer builds may be published as GitHub prereleases for testing. They are unsigned and are not certified stable releases. Compilation does not establish native runtime support; only the macOS Apple Silicon debug app has completed the local checks listed in [verification status](docs/implementation-status.md). Stable publication retains signing, licensing, and six-target verification gates. See [release operations](docs/RELEASE.md).
+**Alpha status:** every push to `main` automatically publishes an experimental, unsigned alpha prerelease with installer builds for testing. They are unsigned and are not certified stable releases. Compilation does not establish native runtime support; only the macOS Apple Silicon debug app has completed the local checks listed in [verification status](docs/implementation-status.md). Stable publication retains signing, licensing, and six-target verification gates. See [release operations](docs/RELEASE.md).
 
 ## Development
 
