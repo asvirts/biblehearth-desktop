@@ -14,8 +14,9 @@
       {
         "label": "main",
         "title": "BibleHearth",
-        "width": 1280,
-        "height": 850,
+        "width": 1600,
+        "height": 1060,
+        "visible": false,
         "minWidth": 780,
         "minHeight": 600
       }
