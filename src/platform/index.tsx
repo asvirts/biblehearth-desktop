@@ -400,7 +400,7 @@ function DailyVerse({
         dayOfYear={day}
         highlights={[]}
         showShareButton={false}
-        showBibleAppAttribution
+        showBibleAppAttribution={false}
         background={theme === "dark" ? "dark" : "light"}
       />
       {parts && (
