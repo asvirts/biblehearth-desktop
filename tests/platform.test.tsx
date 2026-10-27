@@ -10,6 +10,7 @@ const sdk = vi.hoisted(() => ({
   root: {} as Record<string, any>,
   provider: {} as Record<string, any>,
   versionsOptions: {} as Record<string, any>,
+  votd: {} as Record<string, any>,
   language: "",
   error: null as Error | null,
   refetch: vi.fn(),
@@ -27,7 +28,10 @@ vi.mock("@youversion/platform-react-ui", () => ({
     Toolbar: () => <div>SDK search and navigation</div>,
     Content: () => <div>SDK passage</div>,
   },
-  VerseOfTheDay: () => <div>SDK daily verse</div>,
+  VerseOfTheDay: (props: Record<string, any>) => {
+    sdk.votd = props;
+    return <div>SDK daily verse</div>;
+  },
   getHttpStatus: (error: { status?: number }) => error?.status,
 }));
 vi.mock("@youversion/platform-react-hooks", () => ({
@@ -186,6 +190,7 @@ describe("Platform boundary", () => {
       book: "JHN",
       chapter: 3,
     });
+    expect(sdk.votd.showBibleAppAttribution).toBe(false);
   });
   it("keeps local children available when no Platform key is configured", async () => {
     vi.stubEnv("VITE_YVP_APP_KEY", "");

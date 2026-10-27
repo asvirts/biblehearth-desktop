@@ -103,6 +103,7 @@ jobs:
       - run: bun install --frozen-lockfile
       - run: bun run typecheck
       - run: bun run test --run
+      - run: node --test scripts/release-downloads.test.mjs
       - run: bun run build
       - run: cargo test --manifest-path src-tauri/Cargo.toml --locked --target ${{ matrix.target }}
       - name: Build installer without updater artifacts
@@ -118,6 +119,7 @@ jobs:
           import { readdirSync, readFileSync, writeFileSync, mkdirSync, copyFileSync, statSync } from 'node:fs';
           import { join, basename, extname } from 'node:path';
           import { createHash } from 'node:crypto';
+          import { platforms, installerAsset } from './scripts/release-downloads.mjs';
           const { RELEASE_TAG: tag, TARGET: target } = process.env;
           const gh = (...args) => execFileSync('gh', args, { encoding: 'utf8' });
           const release = JSON.parse(gh('release', 'view', tag, '--json', 'isPrerelease,isDraft'));
@@ -128,21 +130,30 @@ jobs:
           const candidates = walk(root).filter(path => expected.includes(extname(path)));
           mkdirSync('alpha-assets', { recursive: true });
           const files = [];
+          const labels = new Map();
           for (const extension of expected) {
             const matches = candidates.filter(path => extname(path) === extension);
             if (matches.length !== 1 || statSync(matches[0]).size < 100000) throw new Error(`Expected one nonempty ${extension} installer`);
-            const name = `BibleHearth_${tag.slice(1)}_${target}${extension}`;
+            const { name, label } = installerAsset(tag, target, extension);
             copyFileSync(matches[0], join('alpha-assets', name));
             files.push(name);
+            labels.set(name, label);
           }
           const hash = path => createHash('sha256').update(readFileSync(path)).digest('hex');
           const checksum = `SHA256SUMS-${target}.txt`;
           writeFileSync(join('alpha-assets', checksum), files.map(name => `${hash(join('alpha-assets', name))}  ${name}\n`).join(''));
           files.push(checksum);
+          const platformLabel = platforms.find(platform => platform.target === target).label;
+          labels.set(checksum, `${platformLabel} — SHA-256 checksums`);
           const provenance = `BUILD-${target}.txt`;
           writeFileSync(join('alpha-assets', provenance), `BibleHearth experimental unsigned alpha\nTag: ${tag}\nCommit: ${execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim()}\nTarget: ${target}\nWorkflow: ${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}\nNo distribution signing or notarization. Automatic updates disabled.\nNative interactive runtime verification remains separate from build/test success.\n`);
           files.push(provenance);
-          gh('release', 'upload', tag, ...files.map(name => join('alpha-assets', name)), '--clobber');
+          labels.set(provenance, `${platformLabel} — Build details`);
+          gh('release', 'upload', tag, ...files.map(name => `${join('alpha-assets', name)}#${labels.get(name)}`), '--clobber');
+          const uploaded = JSON.parse(gh('release', 'view', tag, '--json', 'assets')).assets;
+          for (const name of files) {
+            if (uploaded.find(asset => asset.name === name)?.label !== labels.get(name)) throw new Error(`Uploaded label does not match: ${name}`);
+          }
           mkdirSync('alpha-readback', { recursive: true });
           for (const name of files) {
             gh('release', 'download', tag, '--pattern', name, '--dir', 'alpha-readback', '--clobber');

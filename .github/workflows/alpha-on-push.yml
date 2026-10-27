@@ -40,6 +40,7 @@ jobs:
       - run: bun install --frozen-lockfile
       - run: bun run typecheck
       - run: bun run test --run
+      - run: node --test scripts/release-downloads.test.mjs
       - run: bun run build
       - name: Choose the next alpha tag
         id: tag
@@ -70,10 +71,13 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git tag -a "$TAG" "$SHA" -m "BibleHearth $TAG (experimental alpha)"
           git push origin "refs/tags/$TAG"
+          DOWNLOADS="$(node scripts/release-downloads.mjs "$TAG" "$REPO")"
           cat > notes.md <<NOTES
           ## BibleHearth $TAG — experimental alpha
 
           Automatically published from commit \`$SHA\` on \`main\` ([build run]($RUN_URL)). Installers for all six native targets are attached as each build finishes; a target that is missing or failed its checks is not supported by this release.
+
+          $DOWNLOADS
 
           **Read before installing**
 

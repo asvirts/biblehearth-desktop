@@ -32,6 +32,8 @@ Online Scripture; local personal data; no account, cloud sync, audio, parallel r
 
 Use the assets attached to [GitHub Releases](https://github.com/asvirts/biblehearth-desktop/releases); the release notes identify the actual available builds and their verification status. Choose your OS and CPU architecture: macOS DMG, Windows NSIS installer, or Linux AppImage/Debian package. A source archive is not an installer.
 
+New releases label downloads for **macOS Apple Silicon**, **macOS Intel**, **Windows x64** (Intel/AMD), **Windows ARM64**, **Linux x64**, and **Linux ARM64**. Use the release page’s download table to choose the right installer.
+
 Alpha installers are unsigned experimental builds. macOS may block an unnotarized app, and Windows may show an unknown-publisher warning. Follow your organization’s security policy; signing and notarization are planned for verified releases. Alpha builds do not use automatic updates: download a newer installer manually and export your personal-data backup first. Linux AppImages require executable permission and compatible WebKitGTK/system dependencies. Debian installations update through downloaded packages; do not replace them using the AppImage updater.
 
 See [support](docs/SUPPORT.md), [privacy](docs/PRIVACY.md), [verification checklist](docs/VERIFICATION.md), and [domain glossary](GLOSSARY.md).

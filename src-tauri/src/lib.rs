@@ -1,4 +1,5 @@
 mod storage;
+mod window;
 use std::sync::{
     atomic::{AtomicBool, Ordering},
     Mutex,
@@ -257,6 +258,9 @@ pub fn run() {
             app.manage(Database(Mutex::new(conn)));
             app.manage(diagnostics);
             app.manage(ExitAuthorization(AtomicBool::new(false)));
+            if let Some(window) = app.get_webview_window("main") {
+                window::show_at_default_size(&window)?;
+            }
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![

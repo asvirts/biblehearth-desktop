@@ -18,6 +18,7 @@ jobs:
       - run: bun run test --run
       - run: bun run build
       - run: node --test scripts/release-gate.test.mjs
+      - run: node --test scripts/release-downloads.test.mjs
   rust:
     strategy:
       matrix:

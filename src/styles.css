@@ -1556,6 +1556,9 @@ h1 {
 .daily-verse > [data-yv-sdk] {
   padding: 0 !important;
 }
+.daily-verse [data-slot="attribution"] {
+  display: none !important;
+}
 
 /* ------------------------------------------------------------ responsive */
 @media (min-width: 1500px) {
