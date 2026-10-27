@@ -61,7 +61,6 @@ import type {
   Selection,
 } from "./types";
 
-const colors = ["#B9A0E6", "#F0907A", "#7CC3B2", "#F0C063"];
 const colorKeys = ["violet", "coral", "teal", "amber"];
 function Brand() {
   return (
@@ -348,43 +347,29 @@ export default function App() {
   async function annotate(kind: Annotation["kind"], color = "") {
     if (!selection) return;
     if (!(await commitEditor())) return;
-    const now = new Date().toISOString();
-    const existing =
-      kind !== "note"
-        ? state.annotations.find(
-            (a) =>
-              a.kind === kind &&
-              a.versionId === selection.versionId &&
-              a.book === selection.book &&
-              a.chapter === selection.chapter &&
-              a.verses.join(",") === selection.verses.join(","),
-          )
-        : undefined;
-    const item: Annotation = {
-      ...selection,
-      id: existing?.id ?? crypto.randomUUID(),
-      kind,
-      text: "",
-      color,
-      createdAt: existing?.createdAt ?? now,
-      updatedAt: existing
-        ? new Date(
-            Math.max(Date.now(), Date.parse(existing.updatedAt) + 1),
-          ).toISOString()
-        : now,
-    };
     if (kind === "note") {
+      const now = new Date().toISOString();
+      const item: Annotation = {
+        ...selection,
+        id: crypto.randomUUID(),
+        kind,
+        text: "",
+        color,
+        createdAt: now,
+        updatedAt: now,
+      };
       savedText.current = "";
       editorRef.current = item;
       setEditor(item);
       setSaveStatus("saved");
-    } else
-      try {
-        setState(await storage.save(item));
-        setToast(t("saved"));
-      } catch {
-        setToast(t("saveError"));
-      }
+      return;
+    }
+    try {
+      setState(await storage.mark({ ...selection, kind, color }));
+      setToast(t("saved"));
+    } catch {
+      setToast(t("saveError"));
+    }
   }
   function editText(text: string) {
     if (!editorRef.current) return;
@@ -1170,7 +1155,7 @@ export default function App() {
                   {t("addBookmark")}
                 </button>
                 <div className="color-options" aria-label={t("selectedColor")}>
-                  {colors.map((color, i) => (
+                  {state.highlightColors.map((color, i) => (
                     <button
                       key={color}
                       className="color-dot"

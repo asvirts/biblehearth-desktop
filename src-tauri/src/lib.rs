@@ -1,10 +1,12 @@
+mod annotations;
 mod storage;
 mod window;
+use annotations::{Annotation, Mark};
 use std::sync::{
     atomic::{AtomicBool, Ordering},
     Mutex,
 };
-use storage::{Annotation, AppState, ImportSummary, Location, Preferences};
+use storage::{AppState, ImportSummary, Location, Preferences};
 use tauri::menu::{Menu, MenuItem, MenuItemKind};
 use tauri::{Emitter, Manager, State};
 use tauri_plugin_dialog::DialogExt;
@@ -87,13 +89,19 @@ fn save_location(location: Location, db: State<Database>) -> Result<AppState, St
 #[tauri::command]
 fn upsert_annotation(annotation: Annotation, db: State<Database>) -> Result<AppState, String> {
     let c = db.0.lock().map_err(|_| database_error())?;
-    storage::upsert(&c, &annotation)?;
+    annotations::save(&c, &annotation)?;
+    storage::load(&c)
+}
+#[tauri::command]
+fn mark_passage(mark: Mark, db: State<Database>) -> Result<AppState, String> {
+    let c = db.0.lock().map_err(|_| database_error())?;
+    annotations::mark(&c, &mark)?;
     storage::load(&c)
 }
 #[tauri::command]
 fn delete_annotation(id: String, db: State<Database>) -> Result<AppState, String> {
     let c = db.0.lock().map_err(|_| database_error())?;
-    storage::delete(&c, &id)?;
+    annotations::delete(&c, &id)?;
     storage::load(&c)
 }
 #[tauri::command]
@@ -268,6 +276,7 @@ pub fn run() {
             save_preferences,
             save_location,
             upsert_annotation,
+            mark_passage,
             delete_annotation,
             export_backup,
             import_backup,

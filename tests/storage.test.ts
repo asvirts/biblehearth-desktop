@@ -49,4 +49,28 @@ describe("serialized persistence", () => {
       "import_backup_file",
     ]);
   });
+  it("marks a passage by intent, in preview and natively", async () => {
+    const intent = {
+      kind: "highlight" as const,
+      versionId: 111,
+      book: "JHN",
+      chapter: 1,
+      verses: [1],
+      reference: "John 1:1",
+      color: "#B9A0E6",
+    };
+    const { storage } = await import("../src/storage");
+    await storage.mark(intent);
+    const state = await storage.mark({ ...intent, color: "#F0907A" });
+    expect(state.annotations).toHaveLength(1);
+    expect(state.annotations[0]).toMatchObject({
+      kind: "highlight",
+      color: "#F0907A",
+    });
+    expect(state.highlightColors).toContain("#B9A0E6");
+    native.enabled = true;
+    native.invoke.mockResolvedValueOnce({ annotations: [] });
+    await storage.mark(intent);
+    expect(native.invoke).toHaveBeenCalledWith("mark_passage", { mark: intent });
+  });
 });

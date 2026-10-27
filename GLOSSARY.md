@@ -7,6 +7,9 @@
 | Highlight | A local saved color annotation on a version-specific passage. |
 | Note | User-authored plain text attached to a version-specific passage. Several notes may share a passage. |
 | Bookmark | A local saved pointer to a version-specific passage, without a stored Scripture copy. |
+| Annotation | Any personal record attached to a version-specific passage: a Highlight, Note, or Bookmark. |
+| Mark | A Highlight or Bookmark. Marking a passage again updates the existing one. Notes are not Marks, since several may share a passage. |
+| Highlight color | One of a fixed palette of colors a Highlight can have. |
 | Reading position | The last selected version and chapter restored when the reader opens. |
 | Selection | Temporary reader UI state. Selecting Scripture never implicitly creates an annotation. |
 | Backup | Versioned JSON of personal records and preferences; not a Scripture download. |

@@ -5,6 +5,7 @@ import type {
   ReaderLocation,
   Annotation,
   ImportSummary,
+  Mark,
 } from "./types";
 import { detectLocale } from "./i18n";
 export const defaultState = (): AppState => ({
@@ -18,6 +19,8 @@ export const defaultState = (): AppState => ({
   },
   location: null,
   annotations: [],
+  // The native palette is authoritative; this copy only serves the ephemeral preview.
+  highlightColors: ["#B9A0E6", "#F0907A", "#7CC3B2", "#F0C063"],
 });
 // Browser preview is deliberately ephemeral. Production persistence belongs to SQLite.
 let preview: AppState = defaultState();
@@ -58,6 +61,35 @@ export const storage = {
         ...preview,
         annotations: [
           ...preview.annotations.filter((a) => a.id !== annotation.id),
+          annotation,
+        ],
+      };
+      return structuredClone(preview);
+    }),
+  // Marking a passage again updates its existing Highlight or Bookmark. Native
+  // storage assigns ids and timestamps; preview keeps one mark per passage and kind.
+  mark: (mark: Mark) =>
+    serial(async () => {
+      if (isTauri()) return invoke<AppState>("mark_passage", { mark });
+      const now = new Date().toISOString();
+      const same = (a: Annotation) =>
+        a.kind === mark.kind &&
+        a.versionId === mark.versionId &&
+        a.book === mark.book &&
+        a.chapter === mark.chapter &&
+        a.verses.join(",") === mark.verses.join(",");
+      const old = preview.annotations.find(same);
+      const annotation: Annotation = {
+        ...mark,
+        id: old?.id ?? crypto.randomUUID(),
+        text: "",
+        createdAt: old?.createdAt ?? now,
+        updatedAt: now,
+      };
+      preview = {
+        ...preview,
+        annotations: [
+          ...preview.annotations.filter((a) => a !== old),
           annotation,
         ],
       };

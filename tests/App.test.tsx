@@ -43,6 +43,7 @@ vi.mock("../src/storage", () => ({
     },
     location: null,
     annotations: [],
+    highlightColors: [],
   }),
   flushStorage: mocks.flush,
 }));
@@ -104,6 +105,7 @@ beforeEach(() => {
     },
     location: { versionId: 111, book: "JHN", chapter: 1 },
     annotations: [{ ...note }],
+    highlightColors: ["#B9A0E6", "#F0907A", "#7CC3B2", "#F0C063"],
   };
   mocks.load.mockResolvedValue(initial);
   mocks.location.mockImplementation(async (location) => ({

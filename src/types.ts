@@ -32,6 +32,10 @@ export interface Annotation extends Selection {
   createdAt: string;
   updatedAt: string;
 }
+export interface Mark extends Selection {
+  kind: "bookmark" | "highlight";
+  color: string;
+}
 export interface Preferences {
   locale: Locale;
   theme: "light" | "dark" | "system";
@@ -44,6 +48,7 @@ export interface AppState {
   preferences: Preferences;
   location: ReaderLocation | null;
   annotations: Annotation[];
+  highlightColors: string[];
 }
 export interface ImportSummary {
   inserted: number;
