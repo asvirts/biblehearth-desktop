@@ -35,6 +35,7 @@ import { listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import type { Update } from "@tauri-apps/plugin-updater";
 import {
+  PassageName,
   PlatformProvider,
   PlatformReader,
   VersionChooser,
@@ -546,7 +547,12 @@ export default function App() {
         .includes(query.toLocaleLowerCase()),
   );
   const placeLabel = state.location
-    ? reference || `${state.location.book} ${state.location.chapter}`
+    ? reference || (
+        <PassageName
+          location={state.location}
+          fallback={`${state.location.book} ${state.location.chapter}`}
+        />
+      )
     : "";
   const theme =
     document.documentElement.dataset.theme === "dark" ? "dark" : "light";

@@ -6,6 +6,7 @@ import {
   getHttpStatus,
 } from "@youversion/platform-react-ui";
 import {
+  useBook,
   usePassage,
   useVersions,
   useVerses,
@@ -293,6 +294,29 @@ function Reader(props: PlatformReaderProps) {
       </BibleReader.Root>
     </section>
   );
+}
+
+// The book's display name ("John 1") for places shown before the reader loads a passage.
+export function PassageName({
+  location,
+  fallback,
+}: {
+  location: ReaderLocation;
+  fallback: string;
+}) {
+  const online = useOnline();
+  if (!platformConfigured || !online) return fallback;
+  return <BookName location={location} fallback={fallback} />;
+}
+function BookName({
+  location,
+  fallback,
+}: {
+  location: ReaderLocation;
+  fallback: string;
+}) {
+  const { book } = useBook(location.versionId, location.book);
+  return book?.title ? `${book.title} ${location.chapter}` : fallback;
 }
 
 export function VersionChooser(props: {

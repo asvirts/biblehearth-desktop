@@ -59,6 +59,7 @@ vi.mock("../src/updates", () => ({
 }));
 vi.mock("../src/platform", () => ({
   PlatformProvider: ({ children }: { children: React.ReactNode }) => children,
+  PassageName: ({ fallback }: { fallback: string }) => fallback,
   PlatformReader: () => <div>Reader mock</div>,
   VersionChooser: () => <div>Version chooser</div>,
   Votd: () => null,

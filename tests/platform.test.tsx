@@ -35,6 +35,9 @@ vi.mock("@youversion/platform-react-ui", () => ({
   getHttpStatus: (error: { status?: number }) => error?.status,
 }));
 vi.mock("@youversion/platform-react-hooks", () => ({
+  useBook: (_versionId: number, book: string) => ({
+    book: book === "JHN" ? { id: "JHN", title: "John" } : null,
+  }),
   usePassage: () => ({ error: sdk.error, refetch: sdk.refetch }),
   useVerses: () => ({ loading: false, verses: { data: [{id:"1",title:"1",passage_id:"JHN.1.1"}] } }),
   useVersions: (_language: string, _license: unknown, options: object) => {
@@ -61,6 +64,7 @@ vi.mock("@youversion/platform-react-hooks", () => ({
     error: null,
   }),
 }));
+let PassageName: typeof import("../src/platform").PassageName;
 let PlatformReader: typeof import("../src/platform").PlatformReader;
 let PlatformProvider: typeof import("../src/platform").PlatformProvider;
 let VersionChooser: typeof import("../src/platform").VersionChooser;
@@ -87,7 +91,7 @@ beforeEach(async () => {
     value: true,
     configurable: true,
   });
-  ({ PlatformReader, PlatformProvider, VersionChooser, Votd } =
+  ({ PassageName, PlatformReader, PlatformProvider, VersionChooser, Votd } =
     await import("../src/platform"));
 });
 afterEach(() => {
@@ -197,6 +201,16 @@ describe("Platform boundary", () => {
       chapter: 3,
     });
     expect(sdk.votd.showBibleAppAttribution).toBe(false);
+  });
+  it("names a place by its book title, falling back to the code", () => {
+    render(
+      <>
+        <span><PassageName location={{ versionId: 42, book: "JHN", chapter: 1 }} fallback="JHN 1" /></span>
+        <span><PassageName location={{ versionId: 42, book: "XYZ", chapter: 2 }} fallback="XYZ 2" /></span>
+      </>,
+    );
+    expect(screen.getByText("John 1")).toBeInTheDocument();
+    expect(screen.getByText("XYZ 2")).toBeInTheDocument();
   });
   it("keeps local children available when no Platform key is configured", async () => {
     vi.stubEnv("VITE_YVP_APP_KEY", "");
