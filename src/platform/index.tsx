@@ -38,6 +38,12 @@ const readingFonts: Record<string, string> = {
   serif: "var(--font-reading-serif)",
   "sans-serif": "var(--font-sans)",
 };
+// The SDK's font picker reports CSS stacks such as '"Inter", sans-serif', while
+// storage accepts only the generic preference, which is the stack's last family.
+function readingFontPreference(stack: string): "serif" | "sans-serif" {
+  const generic = stack.split(",").at(-1)?.replace(/["']/g, "").trim();
+  return generic === "serif" ? "serif" : "sans-serif";
+}
 
 // A packaged public client key identifies the registered app. It is not a secret.
 export function PlatformProvider({
@@ -278,7 +284,9 @@ function Reader(props: PlatformReaderProps) {
           props.onReadingSettingsChange?.({ fontSize })
         }
         onFontFamilyChange={(fontFamily) =>
-          props.onReadingSettingsChange?.({ fontFamily })
+          props.onReadingSettingsChange?.({
+            fontFamily: readingFontPreference(fontFamily),
+          })
         }
         onChangeLineSpacing={(lineHeight) =>
           props.onReadingSettingsChange?.({ lineHeight })

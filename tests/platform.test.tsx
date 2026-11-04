@@ -153,10 +153,20 @@ describe("Platform boundary", () => {
     fireEvent.click(screen.getByText("Licensed Bible"));
     expect(choose).toHaveBeenCalledWith(42);
   });
-  it("forwards SDK font changes to persistent host preferences", () => {
+  it("forwards SDK reading changes as preferences storage accepts", () => {
     const change=vi.fn(); render(<PlatformReader {...defaults} onReadingSettingsChange={change}/>);
-    act(() => {sdk.root.onFontSizeChange(20);sdk.root.onFontFamilyChange("serif");sdk.root.onChangeLineSpacing(2);});
-    expect(change.mock.calls).toEqual([[{fontSize:20}],[{fontFamily:"serif"}],[{lineHeight:2}]]);
+    act(() => {
+      sdk.root.onFontSizeChange(20);
+      sdk.root.onFontFamilyChange('"Untitled Serif", "Source Serif 4", serif');
+      sdk.root.onFontFamilyChange('"Inter", sans-serif');
+      sdk.root.onChangeLineSpacing(2);
+    });
+    expect(change.mock.calls).toEqual([
+      [{ fontSize: 20 }],
+      [{ fontFamily: "serif" }],
+      [{ fontFamily: "sans-serif" }],
+      [{ lineHeight: 2 }],
+    ]);
   });
   it("renders the reading preference with the app's own font stacks", () => {
     const { rerender } = render(<PlatformReader {...defaults} fontFamily="sans-serif" />);
