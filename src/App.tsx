@@ -756,9 +756,10 @@ export default function App() {
                         </button>
                       </section>
                       <section className="card daily-card">
-                        {!state.location && (
-                          <span className="label">{t("dailyVerse")}</span>
-                        )}
+                        <span className="label">
+                          <Sun size={14} />
+                          {t("dailyVerse")}
+                        </span>
                         {state.location ? (
                           <Votd
                             versionId={state.location.versionId}
@@ -834,28 +835,25 @@ export default function App() {
                       )}
                     </header>
                     {state.location ? (
-                      <>
-                        <p className="reader-tip">{t("readerHint")}</p>
-                        <PlatformReader
-                          location={state.location}
-                          locale={state.preferences.locale}
-                          highlights={highlighted}
-                          onLocationChange={(l) => void locate(l)}
-                          onReference={setReference}
-                          onSelection={(s) =>
-                            setSelection(s.verses.length ? s : null)
-                          }
-                          fontSize={state.preferences.fontSize}
-                          lineHeight={state.preferences.lineHeight}
-                          fontFamily={state.preferences.fontFamily}
-                          theme={state.preferences.theme}
-                          onReadingSettingsChange={(patch) =>
-                            void changePreferences(patch)
-                          }
-                          clearSelectionSignal={clear}
-                          t={t}
-                        />
-                      </>
+                      <PlatformReader
+                        location={state.location}
+                        locale={state.preferences.locale}
+                        highlights={highlighted}
+                        onLocationChange={(l) => void locate(l)}
+                        onReference={setReference}
+                        onSelection={(s) =>
+                          setSelection(s.verses.length ? s : null)
+                        }
+                        fontSize={state.preferences.fontSize}
+                        lineHeight={state.preferences.lineHeight}
+                        fontFamily={state.preferences.fontFamily}
+                        theme={state.preferences.theme}
+                        onReadingSettingsChange={(patch) =>
+                          void changePreferences(patch)
+                        }
+                        clearSelectionSignal={clear}
+                        t={t}
+                      />
                     ) : (
                       <section className="card onboarding-card">
                         <p>{t("chooseVersionBody")}</p>
