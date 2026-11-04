@@ -1,7 +1,8 @@
 import { defineConfig, type Plugin } from "vitest/config";
 import react from "@vitejs/plugin-react";
 
-// BibleHearth is offline and private: no stylesheet may pull fonts from a CDN.
+// Stylesheets must not import fonts from a CDN. The YouVersion SDK's runtime font
+// stylesheet is the one documented exception (design.md, Type).
 // The YouVersion SDK imports Inter and Source Serif from Google Fonts, both in its
 // stylesheet and in the CSS string its JavaScript injects. Strip every remote @import.
 const remoteImport = /@import\s+(?:url\(\s*)?(["'])https?:\/\/.*?\1\s*\)?[^;]*;/g;

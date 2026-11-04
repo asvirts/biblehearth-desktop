@@ -252,7 +252,7 @@ Arabic RTL captures cover home, reader, library, settings and the note editor.
 - Do not read a primitive (`--gray-*`, `--night-*`, `--ember-*`, `--rose-*`) from a component. Read a role.
 - Do not add a dark-mode rule outside the dark token block. If dark needs a different value, it needs a role.
 - Do not add a `:lang()` rule to a component. Language differences belong in the token layer.
-- Do not load fonts or styles from a CDN. New fonts come through Fontsource or local files. `vite.config.ts` strips remote `@import`s, and the CSP allows no font host.
+- Do not load fonts or styles from a CDN. New fonts come through Fontsource or local files. `vite.config.ts` strips remote `@import`s at build time. The CSP's `font-src` allows only the app itself and YouVersion's hosts, for the SDK's runtime font stylesheet described under Type. Do not add another font host.
 - Do not add decorative art. That means glows, gradients, orbit rings, sparkles, ornamental glyphs, illustration blobs and dark hero cards.
 - Do not use serif display type, bold weights, or all-caps headings. Uppercase belongs to the label role only.
 - Do not use the accent for more than one call to action per view, or as a background for large areas.
