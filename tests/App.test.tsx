@@ -250,6 +250,29 @@ describe("navigation drawer and shell", () => {
     expect(menu).toHaveAttribute("aria-expanded", "false");
     expect(document.getElementById("main")!.closest("[inert]")).toBeNull();
   });
+  it("moves focus to the page when widening the window closes the drawer", async () => {
+    const listeners = new Map<string, () => void>();
+    const queries = new Map<string, { matches: boolean }>();
+    window.matchMedia = vi.fn((query: string) => {
+      const media = {
+        matches: false,
+        addEventListener: (_: string, listener: () => void) => listeners.set(query, listener),
+        removeEventListener: vi.fn(),
+      };
+      queries.set(query, media);
+      return media;
+    }) as unknown as typeof window.matchMedia;
+    render(<App />);
+    fireEvent.click(await screen.findByRole("button", { name: "Open navigation" }));
+    const drawerClose = within(document.getElementById("app-drawer")!).getByRole("button", { name: "Close" });
+    await waitFor(() => expect(drawerClose).toHaveFocus());
+    act(() => {
+      queries.get("(min-width: 801px)")!.matches = true;
+      listeners.get("(min-width: 801px)")!();
+    });
+    await waitFor(() => expect(document.getElementById("main")).toHaveFocus());
+    expect(document.getElementById("main")!.closest("[inert]")).toBeNull();
+  });
   it("names the language control in full", async () => {
     render(<App />);
     expect(

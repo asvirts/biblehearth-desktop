@@ -149,6 +149,9 @@ export default function App() {
   const menuButton = useRef<HTMLButtonElement>(null);
   const drawerClose = useRef<HTMLButtonElement>(null);
   const drawerWasOpen = useRef(false);
+  const mainRef = useRef<HTMLElement>(null);
+  // The menu button is hidden once the window is wide, so focus has to land elsewhere.
+  const drawerClosedByWidth = useRef(false);
   const [selection, setSelection] = useState<Selection | null>(null);
   const [clear, setClear] = useState(0);
   const [editor, setEditor] = useState<Annotation | null>(null);
@@ -219,14 +222,19 @@ export default function App() {
       void configureDiagnostics(state.preferences.crashReports).catch(() => {});
   }, [loaded, state.preferences.crashReports]);
   useEffect(() => {
-    if (mobileNav) drawerClose.current?.focus();
-    else if (drawerWasOpen.current) menuButton.current?.focus();
+    if (mobileNav) {
+      drawerClosedByWidth.current = false;
+      drawerClose.current?.focus();
+    } else if (drawerWasOpen.current)
+      (drawerClosedByWidth.current ? mainRef : menuButton).current?.focus();
     drawerWasOpen.current = mobileNav;
   }, [mobileNav]);
   useEffect(() => {
     const wide = window.matchMedia("(min-width: 801px)");
     const closeOnWide = () => {
-      if (wide.matches) setMobileNav(false);
+      if (!wide.matches) return;
+      drawerClosedByWidth.current = true;
+      setMobileNav(false);
     };
     wide.addEventListener("change", closeOnWide);
     return () => wide.removeEventListener("change", closeOnWide);
@@ -757,6 +765,7 @@ export default function App() {
                 <div className="preview-banner">{t("preview")}</div>
               )}
               <main
+                ref={mainRef}
                 id="main"
                 className={`main-content ${route === "reader" ? "reader-content" : ""}`}
                 tabIndex={-1}
