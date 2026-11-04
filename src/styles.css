@@ -12,6 +12,7 @@
   --gray-100: #edeff2;
   --gray-150: #e3e6eb;
   --gray-200: #d6dae1;
+  --gray-450: #808895;
   --gray-500: #737c8a;
   --gray-600: #555e6c;
   --gray-900: #1d2128;
@@ -20,6 +21,7 @@
   --night-850: #1d1f24;
   --night-800: #24272d;
   --night-700: #2f3239;
+  --night-550: #717886;
   --night-500: #7c8492;
   --night-300: #a3abb7;
   --night-100: #e7e9ed;
@@ -42,6 +44,7 @@
   --color-text-faint: var(--gray-500);
   --color-border: var(--gray-150);
   --color-border-strong: var(--gray-200);
+  --color-border-control: var(--gray-450);
   --color-control: var(--gray-500);
   --color-accent: var(--ember-600);
   --color-accent-hover: var(--ember-700);
@@ -56,7 +59,7 @@
   --color-swatch-ring: rgb(0 0 0 / 0.1);
 
   --shadow-card: 0 1px 2px rgb(20 24 31 / 0.04);
-  --shadow-outline: inset 0 0 0 1px var(--color-border-strong);
+  --shadow-outline: inset 0 0 0 1px var(--color-border-control);
   --shadow-raised:
     0 12px 32px -14px rgb(20 24 31 / 0.18), 0 2px 6px rgb(20 24 31 / 0.04);
   --shadow-modal:
@@ -145,6 +148,7 @@
   --color-text-faint: var(--night-500);
   --color-border: var(--night-800);
   --color-border-strong: var(--night-700);
+  --color-border-control: var(--night-550);
   --color-control: var(--night-500);
   --color-accent: var(--ember-300);
   --color-accent-hover: var(--ember-200);

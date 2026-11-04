@@ -19,21 +19,24 @@ BibleHearth is for people who read the Bible every day. The interface should fee
 
 Two layers. Primitives (`--gray-*`, `--night-*`, `--ember-*`, `--rose-*`) hold raw values. Semantic roles (`--color-*` and the rest below) say what a value is for. Components read semantic roles only. Light and dark use the same role names. Only the values change, under `:root[data-theme="dark"]`. `App.tsx` is the single owner of the theme and sets `data-theme` on `<html>`.
 
+Every table below is checked against `src/styles.css` by `tests/design-tokens.test.ts`. Change a value in both places in the same commit. Light values come from `:root`, dark values from `:root[data-theme="dark"]`, and colors are shown resolved to their primitive.
+
 ### Color
 
-| Role | Light | Dark | Use |
+| Token | Light | Dark | Use |
 |---|---|---|---|
 | `--color-canvas` | `#edeff2` | `#16171b` | Page background |
 | `--color-surface` | `#ffffff` | `#1d1f24` | Cards, settings, reader, modals |
 | `--color-surface-sunken` | `#f6f7f9` | `#24272d` | Note previews, version rows, platform messages, segmented track |
-| `--color-surface-raised` | `#ffffff` | `#2f3239` | Floating bars that sit over a surface (selection bar) |
+| `--color-surface-raised` | `#ffffff` | `#2f3239` | Floating bars over a surface (selection bar) |
 | `--color-surface-hover` | `#e3e6eb` | `#2f3239` | Hover fill for quiet buttons |
 | `--color-text` | `#1d2128` | `#e7e9ed` | Primary text |
 | `--color-text-muted` | `#555e6c` | `#a3abb7` | Secondary text, labels, metadata |
 | `--color-text-faint` | `#737c8a` | `#7c8492` | Large placeholders and decorative glyphs only. Never body text |
-| `--color-border` | `#e3e6eb` | `#24272d` | Hairlines inside cards |
-| `--color-border-strong` | `#d6dae1` | `#2f3239` | Page hairlines, outlines of secondary buttons |
-| `--color-control` | `#737c8a` | `#7c8492` | Boundaries of form controls (selects, search underline, switch) |
+| `--color-border` | `#e3e6eb` | `#24272d` | Hairlines inside cards (decorative) |
+| `--color-border-strong` | `#d6dae1` | `#2f3239` | Page hairlines (decorative) |
+| `--color-border-control` | `#808895` | `#717886` | Outline that identifies a control: secondary buttons, the pressed segment. At least 3:1 |
+| `--color-control` | `#737c8a` | `#7c8492` | Boundaries of form controls: selects, search underline, switch |
 | `--color-accent` | `#b8400f` | `#f2946b` | Primary action, current page, accent labels, text links |
 | `--color-accent-hover` | `#97340c` | `#f6b394` | Hover of accent fills |
 | `--color-accent-soft` | `#fcefe9` | `#3b1d11` | Text selection |
@@ -43,83 +46,119 @@ Two layers. Primitives (`--gray-*`, `--night-*`, `--ember-*`, `--rose-*`) hold r
 | `--color-inverse` | `#1d2128` | `#e7e9ed` | Toasts, the pressed filter chip |
 | `--color-on-inverse` | `#ffffff` | `#111215` | Text on inverse |
 | `--color-focus` | `#b8400f` | `#f2946b` | Focus outline |
-| `--color-scrim` | ink at 50% | black at 62% | Modal backdrop |
-| `--color-swatch-ring` | black at 10% | white at 14% | Ring around highlight color dots |
+| `--color-scrim` | `rgb(17 19 23 / 0.5)` | `rgb(0 0 0 / 0.62)` | Modal backdrop |
+| `--color-swatch-ring` | `rgb(0 0 0 / 0.1)` | `rgb(255 255 255 / 0.14)` | Ring around highlight color dots |
 
 Highlight colors (violet, coral, teal, amber) are user data that comes from the native layer. They are rendered inline and are not tokens.
 
-Measured WCAG 2.2 contrast, light then dark. Text is 14.0 and 14.7 on canvas. Muted 5.7 and 7.7 on canvas. Accent 4.8 and 7.9 on canvas. Danger 5.9 and 6.6 on surface. On-accent 5.6 and 8.2. Faint 3.7 and 4.8 on canvas, which is why faint is restricted to large text and decoration. The test checks every role pair in both themes, and it fails if a new `--color-*` role is neither checked nor listed as decorative.
+Measured WCAG 2.2 contrast, light then dark. Text is 14.0 and 14.7 on canvas. Muted 5.7 and 7.7 on canvas. Accent 4.8 and 7.9 on canvas. Danger 5.9 and 6.6 on surface. On-accent 5.6 and 8.2. Control outlines (`--color-border-control`) are 3.1 and 3.4 at their lowest, against the canvas and the sunken surface. Faint is 3.7 and 4.8 on canvas, which is why it is restricted to large text and decoration. The test checks every role pair in both themes, and it fails if a new `--color-*` role is neither checked nor listed as decorative.
 
 ### Type
 
-The whole Geist pack, bundled through Fontsource so the app works offline. No font loads from a CDN.
+The Geist pack is bundled through Fontsource, so the interface works offline. The one exception is the YouVersion reader: at runtime the SDK loads a font stylesheet from YouVersion, the same service that already delivers the Scripture text, because those fonts cover scripts Geist does not. Nothing else loads a font from the network.
 
 | Token | Value | Use |
 |---|---|---|
-| `--font-sans` | Geist (variable), then system fallbacks for Arabic, Korean and Chinese | All interface text |
-| `--font-mono` | Geist Mono (variable) | Metadata: version, dates, save status, language code, preview banner |
-| `--font-pixel` | Geist Pixel, latin only | The "BibleHearth" wordmark and nothing else |
-| `--font-label` | `--font-mono`, or `--font-sans` in ar, ko, zh | The label role |
-| `--font-meta` | `--font-mono`, or `--font-sans` in ar, ko, zh | The meta role (mono would break Arabic joining) |
-| `--font-reading-serif` | System serif (Iowan, Charter, Georgia) | Scripture when the reader picks the serif option. The default reading font is Geist Sans |
+| `--font-sans` | `"Geist Variable", system-ui, -apple-system, "Segoe UI", "Noto Sans", "Noto Sans Arabic", "Geeza Pro", "Apple SD Gothic Neo", "Malgun Gothic", "PingFang SC", "Microsoft YaHei", sans-serif` | All interface text. Geist, then system fonts for Arabic, Korean and Chinese |
+| `--font-mono` | `"Geist Mono Variable", ui-monospace, "SF Mono", Menlo, Consolas, monospace` | Monospace base for labels and metadata |
+| `--font-pixel` | `"Geist Pixel", var(--font-mono)` | The "BibleHearth" wordmark and nothing else |
+| `--font-label` | `var(--font-mono)` | The label role. Sans in ar, ko, zh |
+| `--font-meta` | `var(--font-mono)` | The meta role. Sans in ar, ko, zh, where mono breaks Arabic joining |
+| `--font-reading-serif` | `"Iowan Old Style", Charter, "Sitka Text", Cambria, Georgia, serif` | Scripture when the reader picks serif. The default reading font is Geist Sans |
 
 Geist covers Latin, Cyrillic and Vietnamese. Arabic, Korean and Chinese fall back to the system fonts named in `--font-sans`.
 
-| Size token | rem | Use |
+| Token | Value | Use |
 |---|---|---|
-| `--text-label` | 0.6875 | Labels and metadata |
-| `--text-sm` | 0.8125 | Buttons, chips, secondary copy |
-| `--text-base` | 0.9375 | Body |
-| `--text-md` | 1.0625 | Lead paragraphs, settings section titles, note editor |
-| `--text-lg` | 1.25 | Card passage references, section headings |
-| `--text-xl` | 1.625 | Modal titles, empty-state titles, library search |
-| `--text-2xl` | 2.125 | Continue-reading title, fatal screens |
-| `--text-display` | 2.25 to 3.5, fluid | Page titles |
+| `--text-label` | `0.6875rem` | Labels and metadata |
+| `--text-sm` | `0.8125rem` | Buttons, chips, secondary copy |
+| `--text-base` | `0.9375rem` | Body |
+| `--text-md` | `1.0625rem` | Lead paragraphs, settings section titles, note editor |
+| `--text-lg` | `1.25rem` | Card passage references, section headings |
+| `--text-xl` | `1.625rem` | Modal titles, empty-state titles, library search |
+| `--text-2xl` | `2.125rem` | Continue-reading title, fatal screens |
+| `--text-display` | `clamp(2.25rem, 1.35rem + 2.6vw, 3.5rem)` | Page titles, fluid |
+| `--weight-light` | `300` | Display and titles |
+| `--weight-regular` | `400` | Text |
+| `--weight-medium` | `500` | Buttons and labels. Never bold |
+| `--leading-tight` | `1.08` | Display (1.3 in Arabic) |
+| `--leading-snug` | `1.3` | Titles |
+| `--leading-body` | `1.6` | Body |
+| `--tracking-display` | `-0.035em` | Display (0 in ar, ko, zh) |
+| `--tracking-title` | `-0.015em` | Titles (0 in ar, ko, zh) |
+| `--tracking-label` | `0.08em` | Labels (0 in ar, ko, zh) |
+| `--case-label` | `uppercase` | Label case (none in ar, ko, zh) |
+| `--size-label` | `var(--text-label)` | Label size (--text-sm in ar, ko, zh) |
 
-Weights are `--weight-light` (300) for display and titles, `--weight-regular` (400) for text, and `--weight-medium` (500) for buttons and labels. Never bold. Leading is `--leading-tight` (1.08, or 1.3 in Arabic), `--leading-snug` (1.3) and `--leading-body` (1.6). Tracking is `--tracking-display` (-0.035em), `--tracking-title` (-0.015em) and `--tracking-label` (0.08em). All three become 0 in Arabic, Korean and Chinese. The label case (`--case-label`) is uppercase, and `none` in those languages, where the label size (`--size-label`) also grows from `--text-label` to `--text-sm` so the script stays legible.
+Arabic, Korean and Chinese override `--font-label`, `--font-meta`, `--case-label`, `--size-label` and the three tracking tokens at the token level (`:root:lang(...)`). Arabic also raises `--leading-tight` to `--leading-snug`.
 
 Type roles:
 
 - **Display.** `.page-heading h1`. `--text-display`, light, display tracking.
 - **Title.** Modal, empty-state, confirm and fatal headings. `--text-xl` or `--text-2xl`, light, title tracking.
 - **Label.** `.label`. Mono, uppercase, tracked, muted. Add `.accent` for an invitation ("Note", empty library). Use the class. Do not rebuild the recipe.
-- **Meta.** Version, date, save status, language code, preview banner. `--font-meta` (mono, sans in ar, ko, zh), `--text-label`, muted.
+- **Meta.** Version, date, save status, language code, preview banner. `--font-meta`, `--text-label`, muted.
 
 ### Space, size and layout
 
-| Token | Value |
-|---|---|
-| `--space-1` to `--space-9` | 0.25, 0.5, 0.75, 1, 1.5, 2, 3, 4, 6 rem |
-| `--control-sm`, `--control-md`, `--control-lg` | 2, 2.25, 2.5 rem (chips, icon buttons, buttons and selects) |
-| `--rail-width` | 4.5rem |
-| `--content-max` | 70rem |
-| `--settings-max` | 45rem |
-| `--measure` | 60ch |
+| Token | Value | Use |
+|---|---|---|
+| `--space-1` | `0.25rem` | Tight gaps inside a row |
+| `--space-2` | `0.5rem` | Icon to text, chip gaps |
+| `--space-3` | `0.75rem` | Stacked text inside a card |
+| `--space-4` | `1rem` | Card grid gap, small card padding |
+| `--space-5` | `1.5rem` | Card padding |
+| `--space-6` | `2rem` | Large card padding, heading spacing |
+| `--space-7` | `3rem` | Page side margin on desktop |
+| `--space-8` | `4rem` | Between page sections |
+| `--space-9` | `6rem` | Page bottom padding |
+| `--control-sm` | `2rem` | Chips, quiet icon buttons |
+| `--control-md` | `2.25rem` | Icon buttons, small pills |
+| `--control-lg` | `2.5rem` | Buttons, selects, rail buttons |
+| `--rail-width` | `4.5rem` | Desktop rail |
+| `--content-max` | `70rem` | Main column |
+| `--settings-max` | `45rem` | Settings column |
+| `--measure` | `60ch` | Lead paragraph line length |
 
-### Radius, shadow, layers
+### Radius
 
 | Token | Value | Use |
 |---|---|---|
-| `--radius-xs` | 4px | Focus rings on inline links |
-| `--radius-sm` | 6px | Note previews, version rows, selects |
-| `--radius-md` | 8px | Cards |
-| `--radius-lg` | 12px | Modals, mobile selection sheet |
-| `--radius-pill` | 999px | Buttons, chips, segmented control, selection bar |
-| `--shadow-card` | 1px, nearly invisible | Resting cards |
-| `--shadow-outline` | 1px inset hairline | Secondary buttons, pressed segment |
-| `--shadow-raised` | soft 32px | Hovered cards, selection bar, toasts |
-| `--shadow-modal` | deep 80px | Modals, mobile drawer |
-| `--z-sticky`, `--z-rail`, `--z-floating`, `--z-modal`, `--z-toast`, `--z-skip` | 10, 20, 30, 50, 60, 100 | Stacking order |
+| `--radius-xs` | `4px` | Focus rings on inline links |
+| `--radius-sm` | `6px` | Note previews, version rows, selects |
+| `--radius-md` | `8px` | Cards |
+| `--radius-lg` | `12px` | Modals, mobile selection sheet |
+| `--radius-pill` | `999px` | Buttons, chips, segmented control, selection bar |
+
+### Shadow
+
+| Token | Light | Dark | Use |
+|---|---|---|---|
+| `--shadow-card` | `0 1px 2px rgb(20 24 31 / 0.04)` | `0 1px 2px rgb(0 0 0 / 0.3)` | Resting cards |
+| `--shadow-outline` | `inset 0 0 0 1px var(--color-border-control)` | `inset 0 0 0 1px var(--color-border-control)` | Secondary buttons, pressed segment |
+| `--shadow-raised` | `0 12px 32px -14px rgb(20 24 31 / 0.18), 0 2px 6px rgb(20 24 31 / 0.04)` | `0 14px 36px -14px rgb(0 0 0 / 0.7), 0 2px 6px rgb(0 0 0 / 0.3)` | Hovered cards, selection bar, toasts |
+| `--shadow-modal` | `0 32px 80px -24px rgb(12 14 18 / 0.35), 0 4px 12px rgb(12 14 18 / 0.06)` | `0 32px 90px -20px rgb(0 0 0 / 0.8), 0 4px 12px rgb(0 0 0 / 0.4)` | Modals, mobile drawer |
+
+### Layers
+
+| Token | Value | Use |
+|---|---|---|
+| `--z-sticky` | `10` | Top bar |
+| `--z-rail` | `20` | Rail and drawer |
+| `--z-floating` | `30` | Selection bar |
+| `--z-modal` | `50` | Modals |
+| `--z-toast` | `60` | Toasts |
+| `--z-skip` | `100` | Skip link |
 
 ### Motion
 
-| Token | Value |
-|---|---|
-| `--ease-standard` | cubic-bezier(0.2, 0, 0, 1) |
-| `--ease-out` | cubic-bezier(0.16, 1, 0.3, 1) |
-| `--duration-fast` | 120ms (color and hover) |
-| `--duration-base` | 200ms (shadows, backdrop fade) |
-| `--duration-slow` | 320ms (modal settle, bar rise, drawer) |
+| Token | Value | Use |
+|---|---|---|
+| `--ease-standard` | `cubic-bezier(0.2, 0, 0, 1)` | Color, hover, shadow |
+| `--ease-out` | `cubic-bezier(0.16, 1, 0.3, 1)` | Entrances: modal settle, bar rise, drawer |
+| `--duration-fast` | `120ms` | Color and hover |
+| `--duration-base` | `200ms` | Shadows, backdrop fade |
+| `--duration-slow` | `320ms` | Modal settle, bar rise, drawer |
 
 Animations are `fade`, `settle` (6px rise with a slight scale) and `rise` (8px). They animate opacity and transform only. `prefers-reduced-motion` turns all animation and transition off.
 

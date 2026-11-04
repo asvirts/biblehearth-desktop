@@ -61,6 +61,9 @@ const pairs: [string, string, number][] = [
   ["--color-on-inverse", "--color-inverse", text],
   ["--color-text-faint", "--color-canvas", nonText],
   ["--color-text-faint", "--color-surface", nonText],
+  ["--color-border-control", "--color-surface", nonText],
+  ["--color-border-control", "--color-canvas", nonText],
+  ["--color-border-control", "--color-surface-sunken", nonText],
   ["--color-control", "--color-surface", nonText],
   ["--color-control", "--color-canvas", nonText],
   ["--color-focus", "--color-surface", nonText],
@@ -98,11 +101,30 @@ describe("design tokens", () => {
     for (const source of imports) expect(source).toMatch(/^@fontsource/);
   });
 
-  it("documents every semantic token in design.md", () => {
-    const primitive = /^--(gray|night|ember|rose|yv)-/;
-    const undocumented = Object.keys(light)
+  it("documents every semantic token with the values styles.css defines", () => {
+    const primitive = /^--(gray|night|ember|rose)-/;
+    const darkOverrides = new Set(Object.keys(declarations(block(darkSelector))));
+    const documented = new Map(
+      [...designDoc.matchAll(/^\|\s*`(--[\w-]+)`\s*\|\s*`([^`]+)`\s*\|(?:\s*`([^`]+)`\s*\|)?/gm)].map(
+        (m) => [m[1], m[3] ? [m[2], m[3]] : [m[2]]],
+      ),
+    );
+    const shown = (tokens: Record<string, string>, name: string): string => {
+      const value = tokens[name].replace(/\s+/g, " ");
+      const reference = value.match(/^var\((--[\w-]+)\)$/);
+      return reference && primitive.test(reference[1]) ? shown(tokens, reference[1]) : value;
+    };
+    const drift = Object.keys(light)
       .filter((name) => !primitive.test(name))
-      .filter((name) => !designDoc.includes(name.replace(/\d+$/, "")));
-    expect(undocumented).toEqual([]);
+      .flatMap((name) => {
+        const doc = documented.get(name);
+        if (!doc) return [`${name} has no row in design.md`];
+        const themed = darkOverrides.has(name) || doc.length > 1;
+        const actual = themed ? [shown(light, name), shown(dark, name)] : [shown(light, name)];
+        return doc.join(" | ") === actual.join(" | ")
+          ? []
+          : [`${name}: design.md says ${doc.join(" | ")}, styles.css has ${actual.join(" | ")}`];
+      });
+    expect(drift).toEqual([]);
   });
 });
