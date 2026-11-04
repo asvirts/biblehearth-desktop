@@ -2,6 +2,8 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
+const designDoc = readFileSync("design.md", "utf8");
+
 const css = readFileSync("src/styles.css", "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
 const lightSelector = ":root {";
 const darkSelector = ':root[data-theme="dark"] {';
@@ -94,5 +96,13 @@ describe("design tokens", () => {
     const imports = [...css.matchAll(/@import\s+["']([^"']+)["']/g)].map((m) => m[1]);
     expect(imports.length).toBeGreaterThan(0);
     for (const source of imports) expect(source).toMatch(/^@fontsource/);
+  });
+
+  it("documents every semantic token in design.md", () => {
+    const primitive = /^--(gray|night|ember|rose|yv)-/;
+    const undocumented = Object.keys(light)
+      .filter((name) => !primitive.test(name))
+      .filter((name) => !designDoc.includes(name.replace(/\d+$/, "")));
+    expect(undocumented).toEqual([]);
   });
 });
