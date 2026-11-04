@@ -148,7 +148,7 @@ The ember book mark in `Brand` is BibleHearth's logo. Its fixed colors are the o
 
 All classes live in `src/styles.css`.
 
-- **Shell.** `.rail` is a fixed column at the inline start. It holds the brand mark with the vertical Geist Pixel wordmark at the top, and the theme toggle, language code and settings at the bottom. `.topbar` holds the primary nav as text links at the inline end. The current page gets a 3px ember tab at the top edge. Below 800px the rail becomes a drawer opened by the menu button, and the nav stays in the top bar.
+- **Shell.** `.rail` is a fixed column at the inline start. It holds the brand mark with the vertical Geist Pixel wordmark at the top, and the theme toggle, language code and settings at the bottom. `.topbar` holds the primary nav as text links at the inline end. The current page gets a 2px ember underline under its label. Below 800px the rail becomes a drawer opened by the menu button, and the nav stays in the top bar.
 - **Page heading.** `.page-heading`. An optional label, a display title, a muted lead, and a hairline below.
 - **Card.** `.card` is the surface recipe (white, `--radius-md`, `--shadow-card`). Variants add layout: `.continue-card`, `.daily-card`, `.saved-card`, `.settings-card`, `.onboarding-card`, `.empty-card`, `.platform-reader`.
 - **Saved card.** Label with kind icon or color swatch, then the delete button, the passage reference as a link, the version (meta), a note preview on a sunken surface, then the date (meta) and edit button. The card lifts to `--shadow-raised` on hover and focus-within.

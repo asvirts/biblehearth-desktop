@@ -375,6 +375,7 @@ button:disabled {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
+  white-space: nowrap;
   padding: var(--space-1) 0;
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
@@ -505,13 +506,13 @@ button:disabled {
 .nav-item[aria-current="page"] {
   color: var(--color-text);
 }
-.nav-item[aria-current="page"]::before {
+.nav-item[aria-current="page"]::after {
   content: "";
   position: absolute;
-  top: calc(-1 * var(--space-4));
+  bottom: 1px;
   inset-inline: var(--space-3);
-  height: 3px;
-  border-radius: 0 0 var(--radius-xs) var(--radius-xs);
+  height: 2px;
+  border-radius: var(--radius-pill);
   background: var(--color-accent);
 }
 .offline-badge {
@@ -1412,12 +1413,6 @@ select {
   .offline-badge {
     order: 3;
     margin-inline-start: auto;
-  }
-  .nav-item[aria-current="page"]::before {
-    top: auto;
-    bottom: 0;
-    height: 2px;
-    border-radius: var(--radius-xs);
   }
   .preview-banner {
     margin: 0 var(--space-4);
