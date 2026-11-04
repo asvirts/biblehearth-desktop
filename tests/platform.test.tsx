@@ -154,6 +154,12 @@ describe("Platform boundary", () => {
     act(() => {sdk.root.onFontSizeChange(20);sdk.root.onFontFamilyChange("serif");sdk.root.onChangeLineSpacing(2);});
     expect(change.mock.calls).toEqual([[{fontSize:20}],[{fontFamily:"serif"}],[{lineHeight:2}]]);
   });
+  it("renders the reading preference with the app's own font stacks", () => {
+    const { rerender } = render(<PlatformReader {...defaults} fontFamily="sans-serif" />);
+    expect(sdk.root.fontFamily).toBe("var(--font-sans)");
+    rerender(<PlatformReader {...defaults} fontFamily="serif" />);
+    expect(sdk.root.fontFamily).toBe("var(--font-reading-serif)");
+  });
   it("offers a keyboard-accessible verse selector without persisting selection", () => {
     render(<PlatformReader {...defaults}/>);
     fireEvent.change(screen.getByRole("combobox", {name:"selectedPassage"}), {target:{value:"1"}});

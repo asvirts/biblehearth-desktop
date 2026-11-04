@@ -60,7 +60,7 @@ The whole Geist pack, bundled through Fontsource so the app works offline. No fo
 | `--font-mono` | Geist Mono (variable) | Metadata: version, dates, save status, language code, preview banner |
 | `--font-pixel` | Geist Pixel, latin only | The "BibleHearth" wordmark and nothing else |
 | `--font-label` | `--font-mono`, or `--font-sans` in ar, ko, zh | The label role |
-| `--font-reading-serif` | System serif (Iowan, Charter, Georgia) | Scripture when the reader picks the serif option |
+| `--font-reading-serif` | System serif (Iowan, Charter, Georgia) | Scripture when the reader picks the serif option. The default reading font is Geist Sans |
 
 Geist covers Latin, Cyrillic and Vietnamese. Arabic, Korean and Chinese fall back to the system fonts named in `--font-sans`.
 

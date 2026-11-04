@@ -14,7 +14,7 @@ export const defaultState = (): AppState => ({
     theme: "system",
     fontSize: 20,
     lineHeight: 1.8,
-    fontFamily: "serif",
+    fontFamily: "sans-serif",
     crashReports: false,
   },
   location: null,

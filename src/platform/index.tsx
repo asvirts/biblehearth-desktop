@@ -32,6 +32,11 @@ export const platformConfigured = Boolean(
   import.meta.env.VITE_YVP_APP_KEY?.trim(),
 );
 type Theme = "light" | "dark" | "system";
+// The SDK writes fontFamily straight into CSS, so generic names would bypass Geist.
+const readingFonts: Record<string, string> = {
+  serif: "var(--font-reading-serif)",
+  "sans-serif": "var(--font-sans)",
+};
 
 // A packaged public client key identifies the registered app. It is not a secret.
 export function PlatformProvider({
@@ -266,7 +271,7 @@ function Reader(props: PlatformReaderProps) {
           })
         }
         fontSize={fontSize}
-        fontFamily={fontFamily}
+        fontFamily={readingFonts[fontFamily] ?? fontFamily}
         lineSpacing={lineHeight}
         onFontSizeChange={(fontSize) =>
           props.onReadingSettingsChange?.({ fontSize })
