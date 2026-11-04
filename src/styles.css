@@ -540,7 +540,9 @@ button:disabled {
   width: 100%;
   max-width: calc(var(--content-max) + 2 * var(--space-7));
   padding: var(--space-6) var(--space-7) var(--space-9);
-  outline: none;
+}
+.main-content:focus-visible {
+  outline-offset: -2px;
 }
 .reader-content {
   padding-bottom: calc(var(--space-9) + var(--space-8));

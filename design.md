@@ -239,6 +239,9 @@ Arabic RTL captures cover home, reader, library, settings and the note editor.
 - WCAG 2.2 AA contrast for every text and control role, in both themes, checked by the test.
 - Focus is always visible. The global rule is a 2px `--color-focus` outline with a 2px offset. Inputs that hide their own outline (search field, note editor) show focus on their container or hairline instead.
 - Every action is a native button with a text or `aria-label` name. Toggles expose `aria-pressed`. The current page exposes `aria-current`.
+- The mobile drawer's menu button exposes `aria-expanded` and `aria-controls`. Opening the drawer moves focus to its close button, everything outside it becomes `inert`, Escape closes it, and focus returns to the menu button. Widening the window past 800px closes it.
+- The skip link lands on `#main`, which shows the focus outline. Never remove the outline from a focus target.
+- A control whose visible text is a code (the language button shows "EN") carries an `aria-label` with the full name that still contains the visible text.
 - Layout uses logical properties (`inset-inline`, `margin-inline`, `padding-inline`, `text-align: start`), so Arabic mirrors without separate rules.
 - Passage references are wrapped in `<bdi>`, and user-written text (note editor, note previews) takes `dir="auto"`, so an English note in the Arabic interface still reads left to right. The SDK's book and chapter button is read as one `unicode-bidi: plaintext` run, so RTL shows "John 1", not "1 John".
 - Forced colors mode gives cards, buttons, chips, modals, toasts and the selection bar a real border.

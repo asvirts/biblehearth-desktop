@@ -146,6 +146,9 @@ export default function App() {
   const [loadError, setLoadError] = useState(false);
   const [route, setRoute] = useState<Route>("home");
   const [mobileNav, setMobileNav] = useState(false);
+  const menuButton = useRef<HTMLButtonElement>(null);
+  const drawerClose = useRef<HTMLButtonElement>(null);
+  const drawerWasOpen = useRef(false);
   const [selection, setSelection] = useState<Selection | null>(null);
   const [clear, setClear] = useState(0);
   const [editor, setEditor] = useState<Annotation | null>(null);
@@ -215,6 +218,19 @@ export default function App() {
     if (loaded)
       void configureDiagnostics(state.preferences.crashReports).catch(() => {});
   }, [loaded, state.preferences.crashReports]);
+  useEffect(() => {
+    if (mobileNav) drawerClose.current?.focus();
+    else if (drawerWasOpen.current) menuButton.current?.focus();
+    drawerWasOpen.current = mobileNav;
+  }, [mobileNav]);
+  useEffect(() => {
+    const wide = window.matchMedia("(min-width: 801px)");
+    const closeOnWide = () => {
+      if (wide.matches) setMobileNav(false);
+    };
+    wide.addEventListener("change", closeOnWide);
+    return () => wide.removeEventListener("change", closeOnWide);
+  }, []);
   useEffect(() => {
     if (!toast) return;
     const handle = setTimeout(() => setToast(""), 6000);
@@ -644,12 +660,16 @@ export default function App() {
       <IconContext.Provider value={iconDefaults}>
         <Boundary t={t}>
           <div className="app-shell">
-            <a className="skip-link" href="#main">
+            <a className="skip-link" href="#main" inert={mobileNav}>
               {t("skipContent")}
             </a>
-            <aside className={`rail ${mobileNav ? "visible" : ""}`}>
+            <aside
+              id="app-drawer"
+              className={`rail ${mobileNav ? "visible" : ""}`}
+            >
               <Brand vertical />
               <button
+                ref={drawerClose}
                 className="drawer-close icon-button"
                 onClick={() => setMobileNav(false)}
                 aria-label={t("close")}
@@ -674,7 +694,7 @@ export default function App() {
                 </button>
                 <button
                   className="rail-button"
-                  title={t("language")}
+                  aria-label={`${t("language")}: ${localeNames[state.preferences.locale]} (${state.preferences.locale.toUpperCase()})`}
                   onClick={() => void navigate("settings")}
                 >
                   <span className="language-code">
@@ -702,12 +722,15 @@ export default function App() {
                 <small>BibleHearth · {__APP_VERSION__}</small>
               </div>
             </aside>
-            <div className="main-shell">
+            <div className="main-shell" inert={mobileNav}>
               <header className="topbar">
                 <button
+                  ref={menuButton}
                   className="menu-button icon-button"
                   onClick={() => setMobileNav(true)}
                   aria-label={t("openNavigation")}
+                  aria-expanded={mobileNav}
+                  aria-controls="app-drawer"
                 >
                   <List size={20} />
                 </button>
@@ -1154,7 +1177,7 @@ export default function App() {
               </main>
             </div>
             {selection && route === "reader" && !editor && (
-              <div className="selection-bar">
+              <div className="selection-bar" inert={mobileNav}>
                 <strong>
                   <bdi>{selection.reference}</bdi>
                 </strong>
@@ -1322,7 +1345,7 @@ export default function App() {
               </Modal>
             )}
             {toast && (
-              <div className="toast" role="status">
+              <div className="toast" role="status" inert={mobileNav}>
                 <Check size={16} />
                 <span>{toast}</span>
                 <button
@@ -1337,6 +1360,7 @@ export default function App() {
             {update && route !== "settings" && (
               <button
                 className="update-toast"
+                inert={mobileNav}
                 onClick={() => void navigate("settings")}
               >
                 <DownloadSimple size={16} />

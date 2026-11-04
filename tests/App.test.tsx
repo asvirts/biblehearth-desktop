@@ -234,3 +234,26 @@ describe("note persistence", () => {
   });
 
 });
+describe("navigation drawer and shell", () => {
+  it("exposes the drawer state, moves focus in and back, and makes the page inert", async () => {
+    render(<App />);
+    const menu = await screen.findByRole("button", { name: "Open navigation" });
+    const drawerClose = within(document.getElementById("app-drawer")!).getByRole("button", { name: "Close" });
+    expect(menu).toHaveAttribute("aria-expanded", "false");
+    expect(menu).toHaveAttribute("aria-controls", "app-drawer");
+    fireEvent.click(menu);
+    expect(menu).toHaveAttribute("aria-expanded", "true");
+    await waitFor(() => expect(drawerClose).toHaveFocus());
+    expect(document.getElementById("main")!.closest("[inert]")).not.toBeNull();
+    fireEvent.keyDown(window, { key: "Escape" });
+    await waitFor(() => expect(menu).toHaveFocus());
+    expect(menu).toHaveAttribute("aria-expanded", "false");
+    expect(document.getElementById("main")!.closest("[inert]")).toBeNull();
+  });
+  it("names the language control in full", async () => {
+    render(<App />);
+    expect(
+      await screen.findByRole("button", { name: "App language: English (EN)" }),
+    ).toBeInTheDocument();
+  });
+});
