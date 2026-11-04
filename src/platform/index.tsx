@@ -91,6 +91,7 @@ class ContentBoundary extends Component<
         <div role="alert" className="platform-message">
           <p>{this.props.t("platformError")}</p>
           <button
+            className="button secondary"
             onClick={() =>
               this.setState((s) => ({ failed: false, attempt: s.attempt + 1 }))
             }
@@ -130,7 +131,9 @@ function RequestError({
   return (
     <div className="platform-message" role="alert">
       <p>{t(platformErrorKey(error))}</p>
-      <button onClick={retry}>{t("retry")}</button>
+      <button className="button secondary" onClick={retry}>
+        {t("retry")}
+      </button>
     </div>
   );
 }
@@ -207,9 +210,9 @@ function Reader(props: PlatformReaderProps) {
     (props.theme !== "light" &&
       window.matchMedia("(prefers-color-scheme: dark)").matches);
   return (
-    <section className="platform-reader" aria-label={t("reader")}>
+    <section className="card platform-reader" aria-label={t("reader")}>
       <label className="keyboard-verse-selector">
-        <span>{t("selectedPassage")}</span>
+        <span className="label">{t("selectedPassage")}</span>
         <select
           aria-label={t("selectedPassage")}
           value={keyboardVerse}
@@ -321,8 +324,11 @@ function Catalog({
   return (
     <div className="version-catalog">
       <div className="catalog-header">
-        <h3>{t(all ? "chooseVersion" : "suggestedVersions")}</h3>
+        <h3 className="label">
+          {t(all ? "chooseVersion" : "suggestedVersions")}
+        </h3>
         <button
+          className="button secondary"
           onClick={() => {
             setAll(!all);
             setPage(undefined);
@@ -352,7 +358,10 @@ function Catalog({
         ))}
       </div>
       {versions?.next_page_token && (
-        <button onClick={() => setPage(versions.next_page_token!)}>
+        <button
+          className="button secondary"
+          onClick={() => setPage(versions.next_page_token!)}
+        >
           {t("moreVersions")}
         </button>
       )}
@@ -405,6 +414,7 @@ function DailyVerse({
       />
       {parts && (
         <button
+          className="button secondary"
           onClick={() =>
             onNavigate({ versionId, book: parts[0], chapter: Number(parts[1]) })
           }

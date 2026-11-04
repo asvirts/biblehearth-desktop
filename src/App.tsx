@@ -7,32 +7,29 @@ import {
   type ReactNode,
 } from "react";
 import {
-  BookOpen,
-  House,
-  Library,
-  Settings,
-  Flame,
-  ArrowUpRight,
+  IconContext,
   ArrowRight,
-  Bookmark,
-  Highlighter,
-  PenLine,
-  Search,
-  Sun,
-  Moon,
-  Monitor,
-  Globe,
-  Shield,
-  Download,
-  Upload,
-  RefreshCw,
-  X,
-  Menu,
-  Trash2,
+  ArrowUpRight,
+  BookmarkSimple,
+  Books,
   Check,
-  Sparkles,
-  WifiOff,
-} from "lucide-react";
+  Desktop,
+  DownloadSimple,
+  GearSix,
+  HighlighterCircle,
+  List,
+  MagnifyingGlass,
+  Moon,
+  PencilSimpleLine,
+  ShieldCheck,
+  Sun,
+  Trash,
+  UploadSimple,
+  WifiSlash,
+  X,
+  type Icon,
+  type IconProps,
+} from "@phosphor-icons/react";
 import { invoke, isTauri } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
@@ -62,14 +59,37 @@ import type {
 } from "./types";
 
 const colorKeys = ["violet", "coral", "teal", "amber"];
-function Brand() {
+const iconDefaults: IconProps = {
+  size: 18,
+  weight: "light",
+  "aria-hidden": true,
+  focusable: "false",
+};
+const primaryNavigation: Route[] = ["home", "reader", "library"];
+const kindIcon: Record<Annotation["kind"], Icon> = {
+  note: PencilSimpleLine,
+  highlight: HighlighterCircle,
+  bookmark: BookmarkSimple,
+};
+const filters = [
+  { id: "all", label: "all" },
+  { id: "note", label: "notes" },
+  { id: "bookmark", label: "bookmarks" },
+  { id: "highlight", label: "highlights" },
+] as const;
+const themes = [
+  { key: "light", Icon: Sun },
+  { key: "dark", Icon: Moon },
+  { key: "system", Icon: Desktop },
+] as const;
+function Brand({ vertical = false }: { vertical?: boolean }) {
   return (
-    <div className="brand">
+    <div className={vertical ? "brand brand-vertical" : "brand"}>
       <svg
         className="brand-mark"
         viewBox="0 0 64 64"
-        width="38"
-        height="38"
+        width="28"
+        height="28"
         aria-hidden="true"
         focusable="false"
       >
@@ -88,9 +108,7 @@ function Brand() {
           d="M28.2 39.2c0-3.6 2.6-5.6 3.8-9 1.2 3.4 3.8 5.4 3.8 9a3.8 3.8 0 1 1-7.6 0z"
         />
       </svg>
-      <span>
-        Bible<span className="brand-light">Hearth</span>
-      </span>
+      <span className="brand-word">BibleHearth</span>
     </div>
   );
 }
@@ -104,11 +122,11 @@ class Boundary extends Component<
   }
   render() {
     return this.state.error ? (
-      <div className="empty">
+      <div className="empty-state">
         <h2>{this.props.t("errorTitle")}</h2>
         <p>{this.props.t("errorBody")}</p>
         <button
-          className="primary"
+          className="button primary"
           onClick={() => this.setState({ error: false })}
         >
           {this.props.t("restore")}
@@ -530,40 +548,37 @@ export default function App() {
   const placeLabel = state.location
     ? reference || `${state.location.book} ${state.location.chapter}`
     : "";
-  const navigation = [
-    { id: "home" as const, icon: House },
-    { id: "reader" as const, icon: BookOpen },
-    { id: "library" as const, icon: Library },
-    { id: "settings" as const, icon: Settings },
-  ];
+  const theme =
+    document.documentElement.dataset.theme === "dark" ? "dark" : "light";
+  const dateFormat = new Intl.DateTimeFormat(state.preferences.locale, {
+    month: "short",
+    day: "numeric",
+  });
   function savedCard(a: Annotation) {
-    const Icon =
-      a.kind === "note"
-        ? PenLine
-        : a.kind === "highlight"
-          ? Highlighter
-          : Bookmark;
+    const KindIcon = kindIcon[a.kind];
     return (
-      <article className={`saved-card ${a.kind}`} key={a.id}>
-        <div className="saved-card-top">
-          <span
-            className="saved-icon"
-            style={a.color ? { color: a.color } : undefined}
-          >
-            <Icon size={18} />
+      <article className="card saved-card" key={a.id}>
+        <div className="saved-card-meta">
+          <span className="label">
+            {a.kind === "highlight" && a.color ? (
+              <span className="swatch" style={{ background: a.color }} />
+            ) : (
+              <KindIcon size={14} />
+            )}
+            {t(a.kind)}
           </span>
-          <span>{t(a.kind)}</span>
           <button
-            className="icon-button delete-button"
+            className="icon-button quiet"
             aria-label={t("delete")}
+            title={t("delete")}
             onClick={() => setDeleteTarget(a)}
           >
-            <Trash2 size={16} />
+            <Trash size={16} />
           </button>
         </div>
         <button className="passage-link" onClick={() => void locate(a)}>
           {a.reference}
-          <ArrowUpRight size={17} />
+          <ArrowUpRight size={16} className="directional" />
         </button>
         <span className="version-label">
           {t("version")} {a.versionId}
@@ -573,18 +588,18 @@ export default function App() {
             {a.text || t("notePlaceholder")}
           </button>
         )}
-        <div className="saved-date">
-          {new Intl.DateTimeFormat(state.preferences.locale, {
-            month: "short",
-            day: "numeric",
-          }).format(new Date(a.updatedAt))}
+        <div className="saved-card-foot">
+          <time dateTime={a.updatedAt}>
+            {dateFormat.format(new Date(a.updatedAt))}
+          </time>
           {a.kind === "note" && (
             <button
-              className="icon-button"
+              className="icon-button quiet"
               onClick={() => void editNote(a)}
               aria-label={t("note")}
+              title={t("note")}
             >
-              <PenLine size={15} />
+              <PencilSimpleLine size={14} />
             </button>
           )}
         </div>
@@ -597,7 +612,7 @@ export default function App() {
         <Brand />
         <h1>{t("errorTitle")}</h1>
         <p>{t("saveError")}</p>
-        <button className="primary" onClick={() => void load()}>
+        <button className="button primary" onClick={() => void load()}>
           {t("retry")}
         </button>
       </main>
@@ -606,7 +621,9 @@ export default function App() {
     return (
       <main className="fatal">
         <Brand />
-        <p role="status">{t("loading")}</p>
+        <p role="status" className="label">
+          {t("loading")}
+        </p>
       </main>
     );
   return (
@@ -614,427 +631,405 @@ export default function App() {
       locale={state.preferences.locale}
       theme={state.preferences.theme}
     >
-      <Boundary t={t}>
-        <div className="app-shell">
-          <a className="skip-link" href="#main">
-            {t("skipContent")}
-          </a>
-          <aside className={`sidebar ${mobileNav ? "visible" : ""}`}>
-            <Brand />
-            <button
-              className="mobile-close icon-button"
-              onClick={() => setMobileNav(false)}
-              aria-label={t("close")}
-            >
-              <X />
-            </button>
-            <nav aria-label="BibleHearth">
-              {navigation.map(({ id, icon: Icon }) => (
-                <button
-                  key={id}
-                  aria-current={route === id ? "page" : undefined}
-                  className={route === id ? "nav-item active" : "nav-item"}
-                  onClick={() => void navigate(id)}
-                >
-                  <Icon size={20} />
-                  <span>{t(id)}</span>
-                  {route === id && <span className="active-dot" />}
-                </button>
-              ))}
-            </nav>
-            <div className="sidebar-art">
-              <div className="little-flame">
-                <Flame size={30} />
-              </div>
-              <p>{t("tagline")}</p>
-              <span className="art-orbit" />
-            </div>
-            <div className="sidebar-footer">
-              <Shield size={14} />
-              <span>{t("localOnly")}</span>
-            </div>
-            <small className="app-version">
-              BibleHearth · {__APP_VERSION__}
-            </small>
-          </aside>
-          <div className="main-shell">
-            <header className="topbar">
+      <IconContext.Provider value={iconDefaults}>
+        <Boundary t={t}>
+          <div className="app-shell">
+            <a className="skip-link" href="#main">
+              {t("skipContent")}
+            </a>
+            <aside className={`rail ${mobileNav ? "visible" : ""}`}>
+              <Brand vertical />
               <button
-                className="mobile-menu icon-button"
-                onClick={() => setMobileNav(true)}
-                aria-label={t("openNavigation")}
+                className="drawer-close icon-button"
+                onClick={() => setMobileNav(false)}
+                aria-label={t("close")}
               >
-                <Menu />
+                <X size={20} />
               </button>
-              <div className="topbar-actions">
-                {!online && (
-                  <span className="offline-badge">
-                    <WifiOff size={14} />
-                    {t("offline")}
-                  </span>
-                )}
+              <div className="rail-tools">
                 <button
-                  className="icon-button"
+                  className="rail-button"
                   aria-label={t("theme")}
+                  title={t("theme")}
                   onClick={() =>
                     void changePreferences({
-                      theme:
-                        document.documentElement.dataset.theme === "dark"
-                          ? "light"
-                          : "dark",
+                      theme: theme === "dark" ? "light" : "dark",
                     })
                   }
                 >
-                  {document.documentElement.dataset.theme === "dark" ? (
-                    <Moon size={19} />
-                  ) : (
-                    <Sun size={19} />
-                  )}
+                  {theme === "dark" ? <Moon size={20} /> : <Sun size={20} />}
+                  <span className="rail-label" aria-hidden="true">
+                    {t("theme")}
+                  </span>
                 </button>
                 <button
-                  className="language-pill"
+                  className="rail-button"
+                  title={t("language")}
                   onClick={() => void navigate("settings")}
                 >
-                  <Globe size={15} />
-                  {state.preferences.locale.toUpperCase()}
+                  <span className="language-code">
+                    {state.preferences.locale.toUpperCase()}
+                  </span>
+                  <span className="rail-label" aria-hidden="true">
+                    {localeNames[state.preferences.locale]}
+                  </span>
+                </button>
+                <button
+                  className="rail-button"
+                  aria-current={route === "settings" ? "page" : undefined}
+                  title={t("settings")}
+                  onClick={() => void navigate("settings")}
+                >
+                  <GearSix size={20} />
+                  <span className="rail-label">{t("settings")}</span>
                 </button>
               </div>
-            </header>
-            {!isTauri() && <div className="preview-banner">{t("preview")}</div>}
-            <main
-              id="main"
-              className={`main-content ${route === "reader" ? "reader-content" : ""}`}
-              tabIndex={-1}
-            >
-              {route === "home" && (
-                <>
-                  <div className="page-heading">
-                    <span className="eyebrow">
-                      <span className="tiny-dot" /> BIBLEHEARTH
-                    </span>
-                    <h1>{t("welcome")}</h1>
-                    <p>{t("welcomeBody")}</p>
-                  </div>
-                  <div className="dashboard-grid">
-                    <section className="hero-card">
-                      <div className="hero-copy">
-                        <span className="eyebrow">{t("yourReading")}</span>
-                        <h2>{state.location ? placeLabel : t("setupTitle")}</h2>
+              <div className="rail-footer">
+                <span>
+                  <ShieldCheck size={14} />
+                  {t("localOnly")}
+                </span>
+                <small>BibleHearth · {__APP_VERSION__}</small>
+              </div>
+            </aside>
+            <div className="main-shell">
+              <header className="topbar">
+                <button
+                  className="menu-button icon-button"
+                  onClick={() => setMobileNav(true)}
+                  aria-label={t("openNavigation")}
+                >
+                  <List size={20} />
+                </button>
+                {!online && (
+                  <span className="offline-badge">
+                    <WifiSlash size={14} />
+                    {t("offline")}
+                  </span>
+                )}
+                <nav className="primary-nav" aria-label="BibleHearth">
+                  {primaryNavigation.map((id) => (
+                    <button
+                      key={id}
+                      aria-current={route === id ? "page" : undefined}
+                      className="nav-item"
+                      onClick={() => void navigate(id)}
+                    >
+                      {t(id)}
+                    </button>
+                  ))}
+                </nav>
+              </header>
+              {!isTauri() && (
+                <div className="preview-banner">{t("preview")}</div>
+              )}
+              <main
+                id="main"
+                className={`main-content ${route === "reader" ? "reader-content" : ""}`}
+                tabIndex={-1}
+              >
+                {route === "home" && (
+                  <>
+                    <header className="page-heading">
+                      <h1>{t("welcome")}</h1>
+                      <p>{t("welcomeBody")}</p>
+                    </header>
+                    <div className="home-grid">
+                      <section className="card continue-card">
+                        <span className="label">{t("yourReading")}</span>
+                        <h2>
+                          {state.location ? placeLabel : t("setupTitle")}
+                        </h2>
                         <p>
                           {state.location ? t("readerHint") : t("setupBody")}
                         </p>
                         <button
-                          className="hero-button"
+                          className="button primary"
                           onClick={() => void navigate("reader")}
                         >
                           {t(
-                            state.location ? "continueReading" : "startReading",
+                            state.location
+                              ? "continueReading"
+                              : "startReading",
                           )}
-                          <ArrowRight size={19} />
+                          <ArrowRight size={16} className="directional" />
                         </button>
-                      </div>
-                      <div className="hero-art" aria-hidden="true">
-                        <div className="hero-glow" />
-                        <div className="hero-ring" />
-                        <div className="hero-ring two" />
-                        <div className="hero-book">
-                          <BookOpen size={120} strokeWidth={0.9} />
-                        </div>
-                      </div>
-                    </section>
-                    <section className="daily-card">
-                      {!state.location && (
-                        <span className="daily-label">
-                          <Sparkles size={17} />
-                          {t("dailyVerse")}
-                        </span>
-                      )}
-                      {state.location ? (
-                        <Votd
-                          versionId={state.location.versionId}
-                          onNavigate={(l) => void locate(l)}
-                          t={t}
-                          theme={state.preferences.theme}
-                        />
-                      ) : (
-                        <>
-                          <div className="daily-art">
-                            <Sun size={44} strokeWidth={1.2} />
-                          </div>
-                          <p>{t("chooseVersionBody")}</p>
-                          <button
-                            className="text-button"
-                            onClick={() => void navigate("reader")}
-                          >
-                            {t("chooseVersion")}
-                            <ArrowUpRight size={18} />
-                          </button>
-                        </>
-                      )}
-                    </section>
-                  </div>
-                  <div className="section-heading">
-                    <div>
-                      <h2>{t("recent")}</h2>
-                      <p>{t("recentBody")}</p>
+                      </section>
+                      <section className="card daily-card">
+                        {!state.location && (
+                          <span className="label">{t("dailyVerse")}</span>
+                        )}
+                        {state.location ? (
+                          <Votd
+                            versionId={state.location.versionId}
+                            onNavigate={(l) => void locate(l)}
+                            t={t}
+                            theme={state.preferences.theme}
+                          />
+                        ) : (
+                          <>
+                            <p>{t("chooseVersionBody")}</p>
+                            <button
+                              className="text-button"
+                              onClick={() => void navigate("reader")}
+                            >
+                              {t("chooseVersion")}
+                              <ArrowUpRight size={14} className="directional" />
+                            </button>
+                          </>
+                        )}
+                      </section>
                     </div>
-                    <button
-                      className="text-button"
-                      onClick={() => void navigate("library")}
-                    >
-                      {t("viewAll")}
-                      <ArrowRight size={16} />
-                    </button>
-                  </div>
-                  {recent.length ? (
-                    <div className="cards-grid">
-                      {recent.slice(0, 3).map(savedCard)}
-                    </div>
-                  ) : (
-                    <div className="empty-library">
-                      <span className="empty-icon">
-                        <Bookmark size={24} />
-                      </span>
+                    <div className="section-heading">
                       <div>
-                        <h3>{t("emptyLibrary")}</h3>
+                        <h2>{t("recent")}</h2>
+                        <p>{t("recentBody")}</p>
+                      </div>
+                      <button
+                        className="text-button"
+                        onClick={() => void navigate("library")}
+                      >
+                        {t("viewAll")}
+                        <ArrowRight size={14} className="directional" />
+                      </button>
+                    </div>
+                    {recent.length ? (
+                      <div className="cards-grid">
+                        {recent.slice(0, 3).map(savedCard)}
+                      </div>
+                    ) : (
+                      <div className="card empty-card">
+                        <h3 className="label accent">
+                          {t("emptyLibrary")}
+                        </h3>
                         <p>{t("emptyLibraryBody")}</p>
                       </div>
-                      <ArrowUpRight className="empty-arrow" size={22} />
-                    </div>
-                  )}
-                  <div className="home-bottom">
-                    <span>
-                      <Shield size={15} />
-                      {t("localOnly")}
-                    </span>
-                    <span>✦</span>
-                    <span>{t("tagline")}</span>
-                  </div>
-                </>
-              )}
-              {route === "reader" && (
-                <>
-                  <div className="reader-heading">
-                    <div>
-                      <span className="eyebrow">{t("reader")}</span>
-                      <h1>
-                        {state.location ? placeLabel : t("chooseVersion")}
-                      </h1>
-                    </div>
-                    {state.location && (
-                      <button
-                        className="secondary"
-                        onClick={() => setChooser(true)}
-                      >
-                        {t("chooseVersion")}
-                      </button>
                     )}
-                  </div>
-                  {state.location ? (
-                    <>
-                      <p className="reader-tip">{t("readerHint")}</p>
-                      <PlatformReader
-                        location={state.location}
-                        locale={state.preferences.locale}
-                        highlights={highlighted}
-                        onLocationChange={(l) => void locate(l)}
-                        onReference={setReference}
-                        onSelection={(s) =>
-                          setSelection(s.verses.length ? s : null)
-                        }
-                        fontSize={state.preferences.fontSize}
-                        lineHeight={state.preferences.lineHeight}
-                        fontFamily={state.preferences.fontFamily}
-                        theme={state.preferences.theme}
-                        onReadingSettingsChange={(patch) =>
-                          void changePreferences(patch)
-                        }
-                        clearSelectionSignal={clear}
-                        t={t}
-                      />
-                    </>
-                  ) : (
-                    <div className="onboarding-card">
-                      <span className="onboarding-icon">
-                        <BookOpen size={34} />
+                    <footer className="home-footer">
+                      <span>
+                        <ShieldCheck size={14} />
+                        {t("localOnly")}
                       </span>
-                      <p>{t("chooseVersionBody")}</p>
-                      <VersionChooser
-                        locale={state.preferences.locale}
-                        onChoose={(versionId) =>
-                          void locate({ versionId, book: "JHN", chapter: 1 })
-                        }
-                        t={t}
-                      />
-                    </div>
-                  )}
-                </>
-              )}
-              {route === "library" && (
-                <>
-                  <div className="page-heading">
-                    <span className="eyebrow">{t("localOnly")}</span>
-                    <h1>{t("library")}</h1>
-                    <p>{t("recentBody")}</p>
-                  </div>
-                  <div className="library-toolbar">
-                    <div className="filter-tabs" aria-label={t("filter")}>
-                      {["all", "note", "bookmark", "highlight"].map((f) => (
+                      <span aria-hidden="true">·</span>
+                      <span>{t("tagline")}</span>
+                    </footer>
+                  </>
+                )}
+                {route === "reader" && (
+                  <>
+                    <header className="page-heading reader-heading">
+                      <div>
+                        <span className="label">{t("reader")}</span>
+                        <h1>
+                          {state.location ? placeLabel : t("chooseVersion")}
+                        </h1>
+                      </div>
+                      {state.location && (
                         <button
-                          key={f}
-                          className={filter === f ? "selected" : ""}
-                          onClick={() => setFilter(f)}
+                          className="button secondary"
+                          onClick={() => setChooser(true)}
                         >
-                          {t(
-                            f === "note"
-                              ? "notes"
-                              : f === "bookmark"
-                                ? "bookmarks"
-                                : f === "highlight"
-                                  ? "highlights"
-                                  : f,
-                          )}
+                          {t("chooseVersion")}
                         </button>
-                      ))}
-                    </div>
-                    <label className="search-field">
-                      <Search size={17} />
-                      <input
-                        aria-label={t("searchLibrary")}
-                        placeholder={t("searchLibrary")}
-                        value={query}
-                        onChange={(e) => setQuery(e.target.value)}
-                      />
-                    </label>
-                  </div>
-                  {visible.length ? (
-                    <div className="cards-grid">{visible.map(savedCard)}</div>
-                  ) : (
-                    <div className="empty">
-                      <Library size={40} strokeWidth={1.2} />
-                      <h2>{t(query ? "noResults" : "emptyLibrary")}</h2>
-                      <p>{t("emptyLibraryBody")}</p>
-                      <button
-                        className="primary"
-                        onClick={() => void navigate("reader")}
+                      )}
+                    </header>
+                    {state.location ? (
+                      <>
+                        <p className="reader-tip">{t("readerHint")}</p>
+                        <PlatformReader
+                          location={state.location}
+                          locale={state.preferences.locale}
+                          highlights={highlighted}
+                          onLocationChange={(l) => void locate(l)}
+                          onReference={setReference}
+                          onSelection={(s) =>
+                            setSelection(s.verses.length ? s : null)
+                          }
+                          fontSize={state.preferences.fontSize}
+                          lineHeight={state.preferences.lineHeight}
+                          fontFamily={state.preferences.fontFamily}
+                          theme={state.preferences.theme}
+                          onReadingSettingsChange={(patch) =>
+                            void changePreferences(patch)
+                          }
+                          clearSelectionSignal={clear}
+                          t={t}
+                        />
+                      </>
+                    ) : (
+                      <section className="card onboarding-card">
+                        <p>{t("chooseVersionBody")}</p>
+                        <VersionChooser
+                          locale={state.preferences.locale}
+                          onChoose={(versionId) =>
+                            void locate({ versionId, book: "JHN", chapter: 1 })
+                          }
+                          t={t}
+                        />
+                      </section>
+                    )}
+                  </>
+                )}
+                {route === "library" && (
+                  <>
+                    <header className="page-heading">
+                      <span className="label">{t("localOnly")}</span>
+                      <h1>{t("library")}</h1>
+                      <p>{t("recentBody")}</p>
+                    </header>
+                    <div className="library-toolbar">
+                      <label className="search-field">
+                        <MagnifyingGlass size={20} />
+                        <input
+                          aria-label={t("searchLibrary")}
+                          placeholder={t("searchLibrary")}
+                          value={query}
+                          onChange={(e) => setQuery(e.target.value)}
+                        />
+                      </label>
+                      <div
+                        className="chips"
+                        role="group"
+                        aria-label={t("filter")}
                       >
-                        {t("startReading")}
-                        <ArrowRight size={17} />
-                      </button>
-                    </div>
-                  )}
-                </>
-              )}
-              {route === "settings" && (
-                <>
-                  <div className="page-heading">
-                    <span className="eyebrow">BIBLEHEARTH</span>
-                    <h1>{t("settings")}</h1>
-                    <p>{t("appearanceBody")}</p>
-                  </div>
-                  <div className="settings-grid">
-                    <section className="settings-card">
-                      <h2>
-                        <Sun size={20} />
-                        {t("appearance")}
-                      </h2>
-                      <label className="field-label">{t("theme")}</label>
-                      <div className="theme-options">
-                        {[
-                          { key: "light" as const, Icon: Sun },
-                          { key: "dark" as const, Icon: Moon },
-                          { key: "system" as const, Icon: Monitor },
-                        ].map(({ key, Icon }) => (
+                        {filters.map((f) => (
                           <button
-                            key={key}
-                            aria-pressed={state.preferences.theme === key}
-                            className={
-                              state.preferences.theme === key ? "selected" : ""
-                            }
-                            onClick={() =>
-                              void changePreferences({ theme: key })
-                            }
+                            key={f.id}
+                            className="chip"
+                            aria-pressed={filter === f.id}
+                            onClick={() => setFilter(f.id)}
                           >
-                            <Icon size={21} />
-                            {t(key)}
+                            {t(f.label)}
                           </button>
                         ))}
                       </div>
-                      <label className="range-label">
-                        {t("fontSize")}
-                        <span>{state.preferences.fontSize}px</span>
-                        <input
-                          type="range"
-                          min="12"
-                          max="20"
-                          step="1"
-                          value={state.preferences.fontSize}
-                          onChange={(e) =>
-                            void changePreferences({
-                              fontSize: Number(e.target.value),
-                            })
-                          }
-                        />
-                      </label>
-                      <label className="range-label">
-                        {t("lineHeight")}
-                        <span>{state.preferences.lineHeight}</span>
-                        <input
-                          type="range"
-                          min="1.2"
-                          max="2.5"
-                          step="0.1"
-                          value={state.preferences.lineHeight}
-                          onChange={(e) =>
-                            void changePreferences({
-                              lineHeight: Number(e.target.value),
-                            })
-                          }
-                        />
-                      </label>
-                      <label className="field-label">
-                        {t("fontFamily")}
-                        <select
-                          value={state.preferences.fontFamily}
-                          onChange={(e) =>
-                            void changePreferences({
-                              fontFamily: e.target.value,
-                            })
-                          }
+                    </div>
+                    {visible.length ? (
+                      <div className="cards-grid">{visible.map(savedCard)}</div>
+                    ) : (
+                      <div className="empty-state">
+                        <Books size={32} />
+                        <h2>{t(query ? "noResults" : "emptyLibrary")}</h2>
+                        <p>{t("emptyLibraryBody")}</p>
+                        <button
+                          className="button primary"
+                          onClick={() => void navigate("reader")}
                         >
-                          <option value="serif">{t("serif")}</option>
-                          <option value="sans-serif">{t("sans")}</option>
-                        </select>
-                      </label>
-                      <label className="field-label">
-                        {t("language")}
-                        <select
-                          value={state.preferences.locale}
-                          onChange={(e) =>
-                            void changePreferences({
-                              locale: e.target.value as Locale,
-                            })
-                          }
-                        >
-                          {Object.entries(localeNames).map(([id, name]) => (
-                            <option key={id} value={id}>
-                              {name}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                    </section>
-                    <div className="settings-stack">
-                      <section className="settings-card">
-                        <h2>
-                          <Shield size={20} />
-                          {t("privacy")}
-                        </h2>
+                          {t("startReading")}
+                          <ArrowRight size={16} className="directional" />
+                        </button>
+                      </div>
+                    )}
+                  </>
+                )}
+                {route === "settings" && (
+                  <>
+                    <header className="page-heading">
+                      <h1>{t("settings")}</h1>
+                      <p>{t("appearanceBody")}</p>
+                    </header>
+                    <div className="settings-column">
+                      <section className="card settings-card">
+                        <h2>{t("appearance")}</h2>
+                        <div className="setting">
+                          <span className="field-label" id="theme-label">
+                            {t("theme")}
+                          </span>
+                          <div
+                            className="segmented"
+                            role="group"
+                            aria-labelledby="theme-label"
+                          >
+                            {themes.map(({ key, Icon: ThemeIcon }) => (
+                              <button
+                                key={key}
+                                aria-pressed={state.preferences.theme === key}
+                                onClick={() =>
+                                  void changePreferences({ theme: key })
+                                }
+                              >
+                                <ThemeIcon size={16} />
+                                {t(key)}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        <label className="setting range-setting">
+                          <span className="field-label">{t("fontSize")}</span>
+                          <output>{state.preferences.fontSize}px</output>
+                          <input
+                            type="range"
+                            min="12"
+                            max="20"
+                            step="1"
+                            value={state.preferences.fontSize}
+                            onChange={(e) =>
+                              void changePreferences({
+                                fontSize: Number(e.target.value),
+                              })
+                            }
+                          />
+                        </label>
+                        <label className="setting range-setting">
+                          <span className="field-label">
+                            {t("lineHeight")}
+                          </span>
+                          <output>{state.preferences.lineHeight}</output>
+                          <input
+                            type="range"
+                            min="1.2"
+                            max="2.5"
+                            step="0.1"
+                            value={state.preferences.lineHeight}
+                            onChange={(e) =>
+                              void changePreferences({
+                                lineHeight: Number(e.target.value),
+                              })
+                            }
+                          />
+                        </label>
+                        <label className="setting">
+                          <span className="field-label">
+                            {t("fontFamily")}
+                          </span>
+                          <select
+                            value={state.preferences.fontFamily}
+                            onChange={(e) =>
+                              void changePreferences({
+                                fontFamily: e.target.value,
+                              })
+                            }
+                          >
+                            <option value="serif">{t("serif")}</option>
+                            <option value="sans-serif">{t("sans")}</option>
+                          </select>
+                        </label>
+                        <label className="setting">
+                          <span className="field-label">{t("language")}</span>
+                          <select
+                            value={state.preferences.locale}
+                            onChange={(e) =>
+                              void changePreferences({
+                                locale: e.target.value as Locale,
+                              })
+                            }
+                          >
+                            {Object.entries(localeNames).map(([id, name]) => (
+                              <option key={id} value={id}>
+                                {name}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                      </section>
+                      <section className="card settings-card">
+                        <h2>{t("privacy")}</h2>
                         <p>{t("privacyBody")}</p>
                         <label className="toggle-row">
                           <span>{t("crashReports")}</span>
                           <input
                             type="checkbox"
+                            className="switch"
                             checked={
                               state.preferences.crashReports &&
                               reportingConfigured
@@ -1049,46 +1044,44 @@ export default function App() {
                         </label>
                         <p className="small">{t("crashReportsBody")}</p>
                         {!reportingConfigured && (
-                          <p className="muted-note">{t("sentryUnavailable")}</p>
+                          <p className="small">
+                            {t("sentryUnavailable")}
+                          </p>
                         )}
                       </section>
-                      <section className="settings-card">
-                        <h2>
-                          <Download size={20} />
-                          {t("backups")}
-                        </h2>
+                      <section className="card settings-card">
+                        <h2>{t("backups")}</h2>
                         <p>{t("backupsBody")}</p>
                         <div className="button-row">
                           <button
-                            className="secondary"
+                            className="button secondary"
                             disabled={busy}
                             onClick={() => void backup("export")}
                           >
-                            <Download size={16} />
+                            <DownloadSimple size={16} />
                             {t("exportBackup")}
                           </button>
                           <button
-                            className="secondary"
+                            className="button secondary"
                             disabled={busy}
                             onClick={() => void backup("import")}
                           >
-                            <Upload size={16} />
+                            <UploadSimple size={16} />
                             {t("importBackup")}
                           </button>
                         </div>
                       </section>
-                      <section className="settings-card">
-                        <h2>
-                          <RefreshCw size={20} />
-                          {t("updates")}
-                        </h2>
-                        <button
-                          className="secondary"
-                          disabled={busy || updateStatus === "checking"}
-                          onClick={() => void checkForUpdates()}
-                        >
-                          {t("checkUpdates")}
-                        </button>
+                      <section className="card settings-card">
+                        <h2>{t("updates")}</h2>
+                        <div className="button-row">
+                          <button
+                            className="button secondary"
+                            disabled={busy || updateStatus === "checking"}
+                            onClick={() => void checkForUpdates()}
+                          >
+                            {t("checkUpdates")}
+                          </button>
+                        </div>
                         {updateStatus && (
                           <p role="status">
                             {t(updateStatus)}
@@ -1098,209 +1091,245 @@ export default function App() {
                         {update && (
                           <>
                             <p className="small">{t("confirmUpdate")}</p>
-                            <button
-                              className="primary"
-                              disabled={busy}
-                              onClick={() => void installUpdate()}
-                            >
-                              {t("installUpdate")}
-                              {busy && ` ${progress}%`}
-                            </button>
+                            <div className="button-row">
+                              <button
+                                className="button primary"
+                                disabled={busy}
+                                onClick={() => void installUpdate()}
+                              >
+                                {t("installUpdate")}
+                                {busy && ` ${progress}%`}
+                              </button>
+                            </div>
                           </>
                         )}
                         {deb && (
-                          <button
-                            className="secondary"
-                            onClick={() =>
-                              void releasePage().catch(() =>
-                                setUpdateStatus("updateError"),
-                              )
-                            }
-                          >
-                            {t("downloadPackage")}
-                          </button>
+                          <div className="button-row">
+                            <button
+                              className="button secondary"
+                              onClick={() =>
+                                void releasePage().catch(() =>
+                                  setUpdateStatus("updateError"),
+                                )
+                              }
+                            >
+                              {t("downloadPackage")}
+                            </button>
+                          </div>
                         )}
                         {updateStatus === "updateReady" && (
-                          <button
-                            className="primary"
-                            onClick={() => void restartSafely()}
-                          >
-                            {t("restart")}
-                          </button>
+                          <div className="button-row">
+                            <button
+                              className="button primary"
+                              onClick={() => void restartSafely()}
+                            >
+                              {t("restart")}
+                            </button>
+                          </div>
                         )}
                       </section>
+                      <section className="card settings-card about-card">
+                        <h2 className="visually-hidden">{t("about")}</h2>
+                        <Brand />
+                        <p>{t("aboutBody")}</p>
+                        <span className="label">
+                          {t("version")} {__APP_VERSION__} · MIT
+                        </span>
+                      </section>
                     </div>
-                    <section className="settings-card about-card">
-                      <Brand />
-                      <p>{t("aboutBody")}</p>
-                      <span>
-                        {t("version")} {__APP_VERSION__} · MIT
-                      </span>
-                    </section>
+                  </>
+                )}
+              </main>
+            </div>
+            {selection && route === "reader" && !editor && (
+              <div className="selection-bar">
+                <strong>{selection.reference}</strong>
+                <div className="selection-actions">
+                  <button
+                    className="pill-action"
+                    onClick={() => void annotate("note")}
+                  >
+                    <PencilSimpleLine size={16} />
+                    {t("addNote")}
+                  </button>
+                  <button
+                    className="pill-action"
+                    onClick={() => void annotate("bookmark")}
+                  >
+                    <BookmarkSimple size={16} />
+                    {t("addBookmark")}
+                  </button>
+                  <div
+                    className="color-options"
+                    role="group"
+                    aria-label={t("selectedColor")}
+                  >
+                    {state.highlightColors.map((color, i) => (
+                      <button
+                        key={color}
+                        className="color-dot"
+                        style={{ background: color }}
+                        aria-label={`${t("addHighlight")} · ${t(colorKeys[i])}`}
+                        title={t(colorKeys[i])}
+                        onClick={() => void annotate("highlight", color)}
+                      />
+                    ))}
                   </div>
-                </>
-              )}
-            </main>
-          </div>
-          {selection && route === "reader" && !editor && (
-            <div className="selection-bar">
-              <strong>{selection.reference}</strong>
-              <div className="selection-actions">
-                <button onClick={() => void annotate("note")}>
-                  <PenLine size={18} />
-                  {t("addNote")}
-                </button>
-                <button onClick={() => void annotate("bookmark")}>
-                  <Bookmark size={18} />
-                  {t("addBookmark")}
-                </button>
-                <div className="color-options" aria-label={t("selectedColor")}>
-                  {state.highlightColors.map((color, i) => (
-                    <button
-                      key={color}
-                      className="color-dot"
-                      style={{ background: color }}
-                      aria-label={`${t("addHighlight")} · ${t(colorKeys[i])}`}
-                      onClick={() => void annotate("highlight", color)}
-                    />
-                  ))}
+                  <button
+                    className="icon-button"
+                    aria-label={t("clearSelection")}
+                    title={t("clearSelection")}
+                    onClick={() => {
+                      setSelection(null);
+                      setClear((x) => x + 1);
+                    }}
+                  >
+                    <X size={18} />
+                  </button>
                 </div>
-                <button
-                  className="icon-button"
-                  aria-label={t("clearSelection")}
-                  onClick={() => {
-                    setSelection(null);
-                    setClear((x) => x + 1);
-                  }}
-                >
-                  <X size={18} />
-                </button>
               </div>
-            </div>
-          )}
-          {editor && (
-            <Modal label={t("note")} onClose={() => void closeEditor()}>
-              <div className="modal-heading">
-                <div>
-                  <span className="eyebrow">{t("note")}</span>
-                  <h2>{editor.reference}</h2>
-                </div>
-                <button
-                  className="icon-button"
-                  onClick={() => void closeEditor()}
-                  aria-label={t("close")}
-                >
-                  <X />
-                </button>
-              </div>
-              <span className="version-label">
-                {t("version")} {editor.versionId}
-              </span>
-              <textarea
-                className="note-editor"
-                autoFocus
-                aria-label={t("note")}
-                placeholder={t("notePlaceholder")}
-                value={editor.text}
-                onChange={(e) => editText(e.target.value)}
-              />
-              <div className="editor-footer">
-                <span
-                  role="status"
-                  className={saveStatus === "error" ? "error-text" : ""}
-                >
-                  {saveStatus === "saved" ? <Check size={15} /> : null}
-                  {t(
-                    saveStatus === "saved"
-                      ? "saved"
-                      : saveStatus === "saving"
-                        ? "saving"
-                        : "saveError",
-                  )}
-                </span>
-                <button className="primary" onClick={() => void commitEditor()}>
-                  {t(saveStatus === "error" ? "retry" : "save")}
-                </button>
-              </div>
-            </Modal>
-          )}
-          {chooser && (
-            <Modal label={t("chooseVersion")} onClose={() => setChooser(false)}>
-              <div className="modal-heading">
-                <h2>{t("chooseVersion")}</h2>
-                <button
-                  className="icon-button"
-                  aria-label={t("close")}
-                  onClick={() => setChooser(false)}
-                >
-                  <X />
-                </button>
-              </div>
-              <VersionChooser
-                locale={state.preferences.locale}
-                onChoose={(versionId) =>
-                  void locate({ ...state.location!, versionId })
-                }
-                t={t}
-              />
-            </Modal>
-          )}
-          {deleteTarget && (
-            <Modal
-              label={t("deleteTitle")}
-              onClose={() => setDeleteTarget(null)}
-            >
-              <h2>{t("deleteTitle")}</h2>
-              <p>{t("deleteConfirm")}</p>
-              <div className="button-row">
-                <button
-                  className="secondary"
-                  onClick={() => setDeleteTarget(null)}
-                >
-                  {t("cancel")}
-                </button>
-                <button
-                  className="danger"
-                  onClick={() => {
-                    void storage
-                      .delete(deleteTarget.id)
-                      .then((next) => {
-                        setState(next);
-                        setDeleteTarget(null);
-                      })
-                      .catch(() => setToast(t("saveError")));
-                  }}
-                >
-                  {t("delete")}
-                </button>
-              </div>
-            </Modal>
-          )}
-          {toast && (
-            <div className="toast" role="status">
-              <Check size={17} />
-              {toast}
-              <button
-                className="icon-button"
-                onClick={() => setToast("")}
-                aria-label={t("close")}
+            )}
+            {editor && (
+              <Modal
+                label={t("note")}
+                onClose={() => void closeEditor()}
+                size="wide"
               >
-                <X size={15} />
+                <div className="modal-heading">
+                  <div>
+                    <span className="label accent">{t("note")}</span>
+                    <h2>{editor.reference}</h2>
+                    <span className="version-label">
+                      {t("version")} {editor.versionId}
+                    </span>
+                  </div>
+                  <button
+                    className="icon-button"
+                    onClick={() => void closeEditor()}
+                    aria-label={t("close")}
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+                <textarea
+                  className="note-editor"
+                  autoFocus
+                  aria-label={t("note")}
+                  placeholder={t("notePlaceholder")}
+                  value={editor.text}
+                  onChange={(e) => editText(e.target.value)}
+                />
+                <div className="editor-footer">
+                  <span
+                    role="status"
+                    className={
+                      saveStatus === "error"
+                        ? "save-status error-text"
+                        : "save-status"
+                    }
+                  >
+                    {saveStatus === "saved" ? <Check size={14} /> : null}
+                    {t(
+                      saveStatus === "saved"
+                        ? "saved"
+                        : saveStatus === "saving"
+                          ? "saving"
+                          : "saveError",
+                    )}
+                  </span>
+                  <button
+                    className="button primary"
+                    onClick={() => void commitEditor()}
+                  >
+                    {t(saveStatus === "error" ? "retry" : "save")}
+                  </button>
+                </div>
+              </Modal>
+            )}
+            {chooser && (
+              <Modal
+                label={t("chooseVersion")}
+                onClose={() => setChooser(false)}
+              >
+                <div className="modal-heading">
+                  <h2>{t("chooseVersion")}</h2>
+                  <button
+                    className="icon-button"
+                    aria-label={t("close")}
+                    onClick={() => setChooser(false)}
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+                <VersionChooser
+                  locale={state.preferences.locale}
+                  onChoose={(versionId) =>
+                    void locate({ ...state.location!, versionId })
+                  }
+                  t={t}
+                />
+              </Modal>
+            )}
+            {deleteTarget && (
+              <Modal
+                label={t("deleteTitle")}
+                onClose={() => setDeleteTarget(null)}
+                size="narrow"
+              >
+                <div className="confirm">
+                  <h2>{t("deleteTitle")}</h2>
+                  <p>{t("deleteConfirm")}</p>
+                  <div className="button-row">
+                    <button
+                      className="button ghost"
+                      onClick={() => setDeleteTarget(null)}
+                    >
+                      {t("cancel")}
+                    </button>
+                    <button
+                      className="button danger"
+                      onClick={() => {
+                        void storage
+                          .delete(deleteTarget.id)
+                          .then((next) => {
+                            setState(next);
+                            setDeleteTarget(null);
+                          })
+                          .catch(() => setToast(t("saveError")));
+                      }}
+                    >
+                      {t("delete")}
+                    </button>
+                  </div>
+                </div>
+              </Modal>
+            )}
+            {toast && (
+              <div className="toast" role="status">
+                <Check size={16} />
+                <span>{toast}</span>
+                <button
+                  className="icon-button"
+                  onClick={() => setToast("")}
+                  aria-label={t("close")}
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            )}
+            {update && route !== "settings" && (
+              <button
+                className="update-toast"
+                onClick={() => void navigate("settings")}
+              >
+                <DownloadSimple size={16} />
+                {t("updateAvailable")}
+                <ArrowRight size={14} className="directional" />
               </button>
-            </div>
-          )}
-          {update && route !== "settings" && (
-            <button
-              className="update-toast"
-              onClick={() => void navigate("settings")}
-            >
-              <Download size={16} />
-              {t("updateAvailable")}
-              <ArrowRight size={16} />
-            </button>
-          )}
-        </div>
-      </Boundary>
+            )}
+          </div>
+        </Boundary>
+      </IconContext.Provider>
     </PlatformProvider>
   );
 }
@@ -1308,10 +1337,12 @@ function Modal({
   children,
   label,
   onClose,
+  size = "regular",
 }: {
   children: ReactNode;
   label: string;
   onClose: () => void;
+  size?: "narrow" | "regular" | "wide";
 }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -1352,7 +1383,7 @@ function Modal({
     >
       <div
         ref={ref}
-        className="modal"
+        className={`modal modal-${size}`}
         role="dialog"
         aria-modal="true"
         aria-label={label}
