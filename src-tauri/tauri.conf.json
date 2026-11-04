@@ -22,7 +22,7 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://*.youversion.com; font-src 'self' data: https://fonts.gstatic.com https://*.youversion.com https://*.bible.com; img-src 'self' data: https://*.youversion.com https://*.bible.com; connect-src ipc: http://ipc.localhost https://*.youversion.com https://*.bible.com https://*.sentry.io https://github.com https://objects.githubusercontent.com https://release-assets.githubusercontent.com; object-src 'none'; base-uri 'self'; frame-src 'none'"
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://*.youversion.com; font-src 'self' data: https://*.youversion.com https://*.bible.com; img-src 'self' data: https://*.youversion.com https://*.bible.com; connect-src ipc: http://ipc.localhost https://*.youversion.com https://*.bible.com https://*.sentry.io https://github.com https://objects.githubusercontent.com https://release-assets.githubusercontent.com; object-src 'none'; base-uri 'self'; frame-src 'none'"
     }
   },
   "bundle": {
