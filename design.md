@@ -60,6 +60,7 @@ The whole Geist pack, bundled through Fontsource so the app works offline. No fo
 | `--font-mono` | Geist Mono (variable) | Metadata: version, dates, save status, language code, preview banner |
 | `--font-pixel` | Geist Pixel, latin only | The "BibleHearth" wordmark and nothing else |
 | `--font-label` | `--font-mono`, or `--font-sans` in ar, ko, zh | The label role |
+| `--font-meta` | `--font-mono`, or `--font-sans` in ar, ko, zh | The meta role (mono would break Arabic joining) |
 | `--font-reading-serif` | System serif (Iowan, Charter, Georgia) | Scripture when the reader picks the serif option. The default reading font is Geist Sans |
 
 Geist covers Latin, Cyrillic and Vietnamese. Arabic, Korean and Chinese fall back to the system fonts named in `--font-sans`.
@@ -82,7 +83,7 @@ Type roles:
 - **Display.** `.page-heading h1`. `--text-display`, light, display tracking.
 - **Title.** Modal, empty-state, confirm and fatal headings. `--text-xl` or `--text-2xl`, light, title tracking.
 - **Label.** `.label`. Mono, uppercase, tracked, muted. Add `.accent` for an invitation ("Note", empty library). Use the class. Do not rebuild the recipe.
-- **Meta.** Version, date, save status, language code, preview banner. Mono, `--text-label`, muted.
+- **Meta.** Version, date, save status, language code, preview banner. `--font-meta` (mono, sans in ar, ko, zh), `--text-label`, muted.
 
 ### Space, size and layout
 
@@ -198,6 +199,7 @@ Arabic RTL captures cover home, reader, library, settings and the note editor.
 - Focus is always visible. The global rule is a 2px `--color-focus` outline with a 2px offset. Inputs that hide their own outline (search field, note editor) show focus on their container or hairline instead.
 - Every action is a native button with a text or `aria-label` name. Toggles expose `aria-pressed`. The current page exposes `aria-current`.
 - Layout uses logical properties (`inset-inline`, `margin-inline`, `padding-inline`, `text-align: start`), so Arabic mirrors without separate rules.
+- Passage references are wrapped in `<bdi>`, and user-written text (note editor, note previews) takes `dir="auto"`, so an English note in the Arabic interface still reads left to right. The SDK's book and chapter button is read as one `unicode-bidi: plaintext` run, so RTL shows "John 1", not "1 John".
 - Forced colors mode gives cards, buttons, chips, modals, toasts and the selection bar a real border.
 
 ## Do not

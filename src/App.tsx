@@ -583,14 +583,18 @@ export default function App() {
           </button>
         </div>
         <button className="passage-link" onClick={() => void locate(a)}>
-          {a.reference}
+          <bdi>{a.reference}</bdi>
           <ArrowUpRight size={16} className="directional" />
         </button>
         <span className="version-label">
           {t("version")} {a.versionId}
         </span>
         {a.kind === "note" && (
-          <button className="note-preview" onClick={() => void editNote(a)}>
+          <button
+            className="note-preview"
+            dir="auto"
+            onClick={() => void editNote(a)}
+          >
             {a.text || t("notePlaceholder")}
           </button>
         )}
@@ -744,7 +748,7 @@ export default function App() {
                       <section className="card continue-card">
                         <span className="label">{t("yourReading")}</span>
                         <h2>
-                          {state.location ? placeLabel : t("setupTitle")}
+                          {state.location ? <bdi>{placeLabel}</bdi> : t("setupTitle")}
                         </h2>
                         <p>
                           {state.location ? t("readerHint") : t("setupBody")}
@@ -828,7 +832,11 @@ export default function App() {
                       <div>
                         <span className="label">{t("reader")}</span>
                         <h1>
-                          {state.location ? placeLabel : t("chooseVersion")}
+                          {state.location ? (
+                            <bdi>{placeLabel}</bdi>
+                          ) : (
+                            t("chooseVersion")
+                          )}
                         </h1>
                       </div>
                       {state.location && (
@@ -1147,7 +1155,9 @@ export default function App() {
             </div>
             {selection && route === "reader" && !editor && (
               <div className="selection-bar">
-                <strong>{selection.reference}</strong>
+                <strong>
+                  <bdi>{selection.reference}</bdi>
+                </strong>
                 <div className="selection-actions">
                   <button
                     className="pill-action"
@@ -1202,7 +1212,9 @@ export default function App() {
                 <div className="modal-heading">
                   <div>
                     <span className="label accent">{t("note")}</span>
-                    <h2>{editor.reference}</h2>
+                    <h2>
+                      <bdi>{editor.reference}</bdi>
+                    </h2>
                     <span className="version-label">
                       {t("version")} {editor.versionId}
                     </span>
@@ -1217,6 +1229,7 @@ export default function App() {
                 </div>
                 <textarea
                   className="note-editor"
+                  dir="auto"
                   autoFocus
                   aria-label={t("note")}
                   placeholder={t("notePlaceholder")}

@@ -70,6 +70,7 @@
     "Geist Mono Variable", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   --font-pixel: "Geist Pixel", var(--font-mono);
   --font-label: var(--font-mono);
+  --font-meta: var(--font-mono);
   --font-reading-serif:
     "Iowan Old Style", Charter, "Sitka Text", Cambria, Georgia, serif;
 
@@ -167,6 +168,7 @@
 :root:lang(ko),
 :root:lang(zh) {
   --font-label: var(--font-sans);
+  --font-meta: var(--font-sans);
   --case-label: none;
   --size-label: var(--text-sm);
   --tracking-label: 0;
@@ -291,7 +293,7 @@ button:disabled {
 .rail-footer small,
 .range-setting output,
 .version-option span {
-  font-family: var(--font-mono);
+  font-family: var(--font-meta);
   font-size: var(--text-label);
   color: var(--color-text-muted);
 }
@@ -854,6 +856,21 @@ button:disabled {
 }
 .platform-reader [data-yv-sdk] {
   background: transparent;
+}
+/* The SDK renders book and chapter as sibling isolates in a flex row, which
+   RTL reverses ("1 John"). Read the whole reference as one auto-direction run. */
+.platform-reader button:has(> bdi + bdi) {
+  display: block;
+  unicode-bidi: plaintext;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.platform-reader button:has(> bdi + bdi) > bdi {
+  unicode-bidi: normal;
+}
+.platform-reader button:has(> bdi + bdi) > bdi + bdi::before {
+  content: "\00a0";
 }
 /* The SDK's search and settings glyphs are filled shapes, so they are swapped
    for Phosphor light outlines (scripts/phosphor-mask.mjs) matched by path data. */
