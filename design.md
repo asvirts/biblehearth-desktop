@@ -166,6 +166,8 @@ Animations are `fade`, `settle` (6px rise with a slight scale) and `rise` (8px).
 
 Phosphor (`@phosphor-icons/react`), weight `light`. `App.tsx` sets defaults through `IconContext` (size 18, light, `aria-hidden`, not focusable), so an icon never adds to an accessible name. Sizes come from a short scale: 14 (meta, inline with small text), 16 (buttons), 18 (default), 20 (rail and close buttons), 32 (empty states). Arrows that point along the reading direction take `className="directional"` and mirror in RTL.
 
+The YouVersion reader toolbar draws its own filled glyphs. Its search, settings, previous and next icons are replaced by Phosphor light outlines through CSS masks that `scripts/phosphor-mask.mjs` generates, matched by the SDK's path data. `tests/sdk-overrides.test.tsx` renders the real SDK and fails if any of those paths, or the hidden verse-of-the-day heading, stops matching. Re-run it after every SDK upgrade.
+
 | Meaning | Icon |
 |---|---|
 | Note | `PencilSimpleLine` |
