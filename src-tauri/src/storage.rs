@@ -26,7 +26,7 @@ impl Default for Preferences {
             theme: "system".into(),
             font_size: 20.0,
             line_height: 1.8,
-            font_family: "serif".into(),
+            font_family: "sans-serif".into(),
             crash_reports: false,
         }
     }

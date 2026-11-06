@@ -6,6 +6,7 @@ import {
   getHttpStatus,
 } from "@youversion/platform-react-ui";
 import {
+  useBook,
   usePassage,
   useVersions,
   useVerses,
@@ -32,6 +33,17 @@ export const platformConfigured = Boolean(
   import.meta.env.VITE_YVP_APP_KEY?.trim(),
 );
 type Theme = "light" | "dark" | "system";
+// The SDK writes fontFamily straight into CSS, so generic names would bypass Geist.
+const readingFonts: Record<string, string> = {
+  serif: "var(--font-reading-serif)",
+  "sans-serif": "var(--font-sans)",
+};
+// The SDK's font picker reports CSS stacks such as '"Inter", sans-serif', while
+// storage accepts only the generic preference, which is the stack's last family.
+function readingFontPreference(stack: string): "serif" | "sans-serif" {
+  const generic = stack.split(",").at(-1)?.replace(/["']/g, "").trim();
+  return generic === "serif" ? "serif" : "sans-serif";
+}
 
 // A packaged public client key identifies the registered app. It is not a secret.
 export function PlatformProvider({
@@ -91,6 +103,7 @@ class ContentBoundary extends Component<
         <div role="alert" className="platform-message">
           <p>{this.props.t("platformError")}</p>
           <button
+            className="button secondary"
             onClick={() =>
               this.setState((s) => ({ failed: false, attempt: s.attempt + 1 }))
             }
@@ -130,7 +143,9 @@ function RequestError({
   return (
     <div className="platform-message" role="alert">
       <p>{t(platformErrorKey(error))}</p>
-      <button onClick={retry}>{t("retry")}</button>
+      <button className="button secondary" onClick={retry}>
+        {t("retry")}
+      </button>
     </div>
   );
 }
@@ -207,9 +222,9 @@ function Reader(props: PlatformReaderProps) {
     (props.theme !== "light" &&
       window.matchMedia("(prefers-color-scheme: dark)").matches);
   return (
-    <section className="platform-reader" aria-label={t("reader")}>
+    <section className="card platform-reader" aria-label={t("reader")}>
       <label className="keyboard-verse-selector">
-        <span>{t("selectedPassage")}</span>
+        <span className="label">{t("selectedPassage")}</span>
         <select
           aria-label={t("selectedPassage")}
           value={keyboardVerse}
@@ -263,13 +278,15 @@ function Reader(props: PlatformReaderProps) {
           })
         }
         fontSize={fontSize}
-        fontFamily={fontFamily}
+        fontFamily={readingFonts[fontFamily] ?? fontFamily}
         lineSpacing={lineHeight}
         onFontSizeChange={(fontSize) =>
           props.onReadingSettingsChange?.({ fontSize })
         }
         onFontFamilyChange={(fontFamily) =>
-          props.onReadingSettingsChange?.({ fontFamily })
+          props.onReadingSettingsChange?.({
+            fontFamily: readingFontPreference(fontFamily),
+          })
         }
         onChangeLineSpacing={(lineHeight) =>
           props.onReadingSettingsChange?.({ lineHeight })
@@ -285,6 +302,29 @@ function Reader(props: PlatformReaderProps) {
       </BibleReader.Root>
     </section>
   );
+}
+
+// The book's display name ("John 1") for places shown before the reader loads a passage.
+export function PassageName({
+  location,
+  fallback,
+}: {
+  location: ReaderLocation;
+  fallback: string;
+}) {
+  const online = useOnline();
+  if (!platformConfigured || !online) return fallback;
+  return <BookName location={location} fallback={fallback} />;
+}
+function BookName({
+  location,
+  fallback,
+}: {
+  location: ReaderLocation;
+  fallback: string;
+}) {
+  const { book } = useBook(location.versionId, location.book);
+  return book?.title ? `${book.title} ${location.chapter}` : fallback;
 }
 
 export function VersionChooser(props: {
@@ -321,8 +361,11 @@ function Catalog({
   return (
     <div className="version-catalog">
       <div className="catalog-header">
-        <h3>{t(all ? "chooseVersion" : "suggestedVersions")}</h3>
+        <h3 className="label">
+          {t(all ? "chooseVersion" : "suggestedVersions")}
+        </h3>
         <button
+          className="button secondary"
           onClick={() => {
             setAll(!all);
             setPage(undefined);
@@ -352,7 +395,10 @@ function Catalog({
         ))}
       </div>
       {versions?.next_page_token && (
-        <button onClick={() => setPage(versions.next_page_token!)}>
+        <button
+          className="button secondary"
+          onClick={() => setPage(versions.next_page_token!)}
+        >
           {t("moreVersions")}
         </button>
       )}
@@ -400,11 +446,13 @@ function DailyVerse({
         dayOfYear={day}
         highlights={[]}
         showShareButton={false}
+        showSunIcon={false}
         showBibleAppAttribution={false}
         background={theme === "dark" ? "dark" : "light"}
       />
       {parts && (
         <button
+          className="button secondary"
           onClick={() =>
             onNavigate({ versionId, book: parts[0], chapter: Number(parts[1]) })
           }

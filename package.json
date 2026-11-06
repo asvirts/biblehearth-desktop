@@ -13,10 +13,10 @@
     "preview": "vite preview --host 127.0.0.1"
   },
   "dependencies": {
-    "@fontsource-variable/fraunces": "^5.3.0",
-    "@fontsource-variable/source-serif-4": "^5.3.1",
-    "@fontsource/dm-sans": "5.3.0",
-    "@fontsource/manrope": "5.3.0",
+    "@fontsource-variable/geist": "5.3.0",
+    "@fontsource-variable/geist-mono": "5.3.0",
+    "@fontsource/geist-pixel": "5.3.0",
+    "@phosphor-icons/react": "2.1.10",
     "@sentry/react": "^10.22.0",
     "@tauri-apps/api": "^2.9.0",
     "@tauri-apps/plugin-dialog": "^2.4.0",
@@ -26,7 +26,6 @@
     "@youversion/platform-core": "2.15.0",
     "@youversion/platform-react-hooks": "2.15.0",
     "@youversion/platform-react-ui": "2.15.0",
-    "lucide-react": "^0.468.0",
     "react": "19.2.0",
     "react-dom": "19.2.0"
   },

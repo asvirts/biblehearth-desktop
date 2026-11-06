@@ -59,6 +59,7 @@ vi.mock("../src/updates", () => ({
 }));
 vi.mock("../src/platform", () => ({
   PlatformProvider: ({ children }: { children: React.ReactNode }) => children,
+  PassageName: ({ fallback }: { fallback: string }) => fallback,
   PlatformReader: () => <div>Reader mock</div>,
   VersionChooser: () => <div>Version chooser</div>,
   Votd: () => null,
@@ -232,4 +233,50 @@ describe("note persistence", () => {
     await waitFor(()=>expect(mocks.invoke).toHaveBeenCalledWith("finish_exit"));
   });
 
+});
+describe("navigation drawer and shell", () => {
+  it("exposes the drawer state, moves focus in and back, and makes the page inert", async () => {
+    render(<App />);
+    const menu = await screen.findByRole("button", { name: "Open navigation" });
+    const drawerClose = within(document.getElementById("app-drawer")!).getByRole("button", { name: "Close" });
+    expect(menu).toHaveAttribute("aria-expanded", "false");
+    expect(menu).toHaveAttribute("aria-controls", "app-drawer");
+    fireEvent.click(menu);
+    expect(menu).toHaveAttribute("aria-expanded", "true");
+    await waitFor(() => expect(drawerClose).toHaveFocus());
+    expect(document.getElementById("main")!.closest("[inert]")).not.toBeNull();
+    fireEvent.keyDown(window, { key: "Escape" });
+    await waitFor(() => expect(menu).toHaveFocus());
+    expect(menu).toHaveAttribute("aria-expanded", "false");
+    expect(document.getElementById("main")!.closest("[inert]")).toBeNull();
+  });
+  it("moves focus to the page when widening the window closes the drawer", async () => {
+    const listeners = new Map<string, () => void>();
+    const queries = new Map<string, { matches: boolean }>();
+    window.matchMedia = vi.fn((query: string) => {
+      const media = {
+        matches: false,
+        addEventListener: (_: string, listener: () => void) => listeners.set(query, listener),
+        removeEventListener: vi.fn(),
+      };
+      queries.set(query, media);
+      return media;
+    }) as unknown as typeof window.matchMedia;
+    render(<App />);
+    fireEvent.click(await screen.findByRole("button", { name: "Open navigation" }));
+    const drawerClose = within(document.getElementById("app-drawer")!).getByRole("button", { name: "Close" });
+    await waitFor(() => expect(drawerClose).toHaveFocus());
+    act(() => {
+      queries.get("(min-width: 801px)")!.matches = true;
+      listeners.get("(min-width: 801px)")!();
+    });
+    await waitFor(() => expect(document.getElementById("main")).toHaveFocus());
+    expect(document.getElementById("main")!.closest("[inert]")).toBeNull();
+  });
+  it("names the language control in full", async () => {
+    render(<App />);
+    expect(
+      await screen.findByRole("button", { name: "App language: English (EN)" }),
+    ).toBeInTheDocument();
+  });
 });
